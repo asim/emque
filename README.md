@@ -1,6 +1,6 @@
 # Micro MQ
 
-A simplistic pub/sub message queue for testing. Purely a toy project.
+A simplistic pub/sub message queue for testing. Purely a toy project. Discovery, clustering, etc coming soon.
 
 Subscription uses websockets.
 
