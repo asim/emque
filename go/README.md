@@ -1,7 +1,7 @@
 # Go Library to connect to Micro MQ
 
 ## Publish Example
-```
+```go
 package main
 
 import (
@@ -24,7 +24,7 @@ func main() {
 ```
 
 ## Subscribe Example
-```
+```go
 package main
 
 import (

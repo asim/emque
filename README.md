@@ -1,6 +1,8 @@
 # Micro MQ
 
-A simplistic pub/sub message queue for testing
+A simplistic pub/sub message queue for testing. Purely a toy project.
+
+Subscription uses websockets.
 
 ## Pub
 
@@ -16,7 +18,7 @@ curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: localhost:
 
 ## Pub using Go Client
 
-```
+```go
 package main
 
 import (
@@ -40,7 +42,7 @@ func main() {
 
 ## Sub using Go Client
 
-```
+```go
 package main
 
 import (
