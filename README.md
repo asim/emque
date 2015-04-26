@@ -1,4 +1,4 @@
-# Micro MQ
+# MQ
 
 A simplistic pub/sub message queue for testing. Purely a toy project. Discovery, clustering, etc coming soon.
 
@@ -25,7 +25,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/asim/micro-mq/go/client"
+	"github.com/asim/mq/go/client"
 )
 
 func main() {
@@ -48,7 +48,7 @@ package main
 import (
 	"log"
 
-	"github.com/asim/micro-mq/go/client"
+	"github.com/asim/mq/go/client"
 )
 
 func main() {
