@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/asim/micro-mq/go/client"
+	"github.com/asim/mq/go/client"
 )
 
 func main() {
