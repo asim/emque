@@ -1,4 +1,4 @@
-# Go Library to connect to Micro MQ
+# Go Library to connect to MQ
 
 ## Publish Example
 ```go
@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/asim/micro-mq/go/client"
+	"github.com/asim/mq/go/client"
 )
 
 func main() {
@@ -30,7 +30,7 @@ package main
 import (
 	"log"
 
-	"github.com/asim/micro-mq/go/client"
+	"github.com/asim/mq/go/client"
 )
 
 func main() {
