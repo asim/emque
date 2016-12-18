@@ -20,6 +20,8 @@ It is used mainly for testing. Purely a toy project.
 - MQ clients cluster MQ servers by publish/subscribing to all servers
 - MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
 
+Because of this simplistic architecture, proxies and servers can be chained to build message pipelines.
+
 ## Usage
 
 ### Install
