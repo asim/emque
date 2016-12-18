@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
 	"github.com/asim/mq/go/client"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
 )
 
@@ -162,10 +164,13 @@ func main() {
 	http.HandleFunc("/pub", pub)
 	http.HandleFunc("/sub", sub)
 
+	// logging handler
+	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
+
 	if len(*cert) > 0 && len(*key) > 0 {
 		log.Println("TLS Enabled")
 		log.Println("MQ listening on", *address)
-		http.ListenAndServeTLS(*address, *cert, *key, Log(http.DefaultServeMux))
+		http.ListenAndServeTLS(*address, *cert, *key, handler)
 		return
 	}
 
@@ -174,5 +179,5 @@ func main() {
 	}
 
 	log.Println("MQ listening on", *address)
-	http.ListenAndServe(*address, Log(http.DefaultServeMux))
+	http.ListenAndServe(*address, handler)
 }
