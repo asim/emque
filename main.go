@@ -87,8 +87,7 @@ func (m *mq) sub(topic string) (<-chan []byte, error) {
 
 func (m *mq) unsub(topic string, sub <-chan []byte) error {
 	if *proxy {
-		// noop
-		return nil
+		return m.client.Unsubscribe(sub)
 	}
 
 	m.RLock()

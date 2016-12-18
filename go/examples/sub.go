@@ -22,10 +22,12 @@ func main() {
 		log.Println(err)
 		return
 	}
+	defer c.Unsubscribe(ch)
 
-	for e := range ch {
-		log.Println(string(e))
+	for i := 0; i < 10; i++ {
+		select {
+		case e := <-ch:
+			log.Println(string(e))
+		}
 	}
-
-	log.Println("channel closed")
 }
