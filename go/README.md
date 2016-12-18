@@ -1,4 +1,4 @@
-# Go Client
+# Go Client [![GoDoc](https://godoc.org/github.com/asim/mq/go/client?status.svg)](https://godoc.org/github.com/asim/mq/go/client)
 
 ## Usage
 
