@@ -40,7 +40,7 @@ mq --cert_file=cert.pem --key_file=key.pem
 
 ### Proxy
 
-MQ can be run as a proxy for an MQ cluster
+MQ can be run as a proxy. It will publish or subscribe to all MQ servers.
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
