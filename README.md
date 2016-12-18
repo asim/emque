@@ -38,6 +38,14 @@ Enable TLS
 mq --cert_file=cert.pem --key_file=key.pem
 ```
 
+### Proxy
+
+MQ can be run as a proxy for an MQ cluster
+
+```shell
+mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
+```
+
 ### Publish
 
 Publish via HTTP
@@ -124,10 +132,3 @@ c := client.New(
 )
 ```
 
-### Proxy
-
-MQ can be run as a proxy for an MQ cluster
-
-```shell
-mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
-```
