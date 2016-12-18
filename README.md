@@ -9,9 +9,16 @@ It is used mainly for testing. Purely a toy project.
 - In-memory message queue
 - Client side clustering
 - Proxying MQ cluster
-- Go client
+- Command line client
+- Go client library
 - HTTP2
 - TLS
+
+## Architecture
+
+- MQ servers are standalone servers with in-memory queues and a HTTP API
+- MQ clients cluster MQ servers by publish/subscribing to all servers
+- MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
 
 ## Usage
 
@@ -27,7 +34,7 @@ Or with Docker
 docker run chuhnk/mq
 ```
 
-### Run
+### Run Server
 
 Listens on `*:8081`
 ```shell
@@ -44,13 +51,27 @@ Enable TLS
 mq --cert_file=cert.pem --key_file=key.pem
 ```
 
-### Proxy
+### Run Proxy
 
 MQ can be run as a proxy. It will publish or subscribe to all MQ servers.
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
 ```
+
+### Run Client
+
+Publish
+
+```shell
+echo "A completely arbitrary message" | mq --client --topic=foo --publish --servers=localhost:8081
+```
+
+Subscribe
+
+```shell
+mq --client --topic=foo --subscribe --servers=localhost:8081
+``` 
 
 ### Publish
 

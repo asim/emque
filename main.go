@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,13 +11,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/asim/mq/go/client"
+	mqclient "github.com/asim/mq/go/client"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
 )
 
 type mq struct {
-	client client.Client
+	client mqclient.Client
 
 	sync.RWMutex
 	topics map[string][]chan []byte
@@ -37,8 +39,16 @@ var (
 	address = flag.String("address", ":8081", "MQ server address")
 	cert    = flag.String("cert_file", "", "TLS certificate file")
 	key     = flag.String("key_file", "", "TLS key file")
+
+	// proxy flags
 	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
 	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
+
+	// client flags
+	client    = flag.Bool("client", false, "Run the MQ client")
+	publish   = flag.Bool("publish", false, "Publish via the MQ client")
+	subscribe = flag.Bool("subscribe", false, "Subscribe via the MQ client")
+	topic     = flag.String("topic", "", "Topic for client to publish or subscribe to")
 
 	defaultMQ *mq
 )
@@ -46,12 +56,28 @@ var (
 func init() {
 	flag.Parse()
 
+	if *proxy && *client {
+		log.Fatal("Client and proxy flags cannot be specified together")
+	}
+
 	if *proxy && len(*servers) == 0 {
 		log.Fatal("Proxy enabled without MQ server list")
 	}
 
+	if *client && len(*topic) == 0 {
+		log.Fatal("Topic not specified")
+	}
+
+	if *client && !*publish && !*subscribe {
+		log.Fatal("Specify whether to publish or subscribe")
+	}
+
+	if *client && len(*servers) == 0 {
+		log.Fatal("Client specified without MQ server list")
+	}
+
 	defaultMQ = &mq{
-		client: client.New(client.WithServers(strings.Split(*servers, ",")...)),
+		client: mqclient.New(mqclient.WithServers(strings.Split(*servers, ",")...)),
 		topics: make(map[string][]chan []byte),
 	}
 }
@@ -134,6 +160,31 @@ func (w *wsWriter) Write(b []byte) error {
 	return w.conn.WriteMessage(websocket.BinaryMessage, b)
 }
 
+func cli() {
+	// process publish
+	if *publish {
+		// scan till EOF
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			defaultMQ.client.Publish(*topic, scanner.Bytes())
+		}
+	}
+
+	if !*subscribe {
+		return
+	}
+
+	// process subscribe
+	ch, err := defaultMQ.client.Subscribe(*topic)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for e := range ch {
+		fmt.Println(string(e))
+	}
+}
+
 func pub(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 	b, err := ioutil.ReadAll(r.Body)
@@ -158,7 +209,7 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	} else {
 		conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
 		if err != nil {
-			http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("Could not open websocket connection: %v", err), http.StatusBadRequest)
 			return
 		}
 		wr = &wsWriter{conn}
@@ -167,7 +218,7 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 	ch, err := defaultMQ.sub(topic)
 	if err != nil {
-		http.Error(w, "Could not retrieve events", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Could not retrieve events: %v", err), http.StatusInternalServerError)
 		return
 	}
 	defer defaultMQ.unsub(topic, ch)
@@ -183,6 +234,12 @@ func sub(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// handle client
+	if *client {
+		cli()
+		return
+	}
+
 	// MQ Handlers
 	http.HandleFunc("/pub", pub)
 	http.HandleFunc("/sub", sub)
@@ -193,7 +250,10 @@ func main() {
 	if len(*cert) > 0 && len(*key) > 0 {
 		log.Println("TLS Enabled")
 		log.Println("MQ listening on", *address)
-		http.ListenAndServeTLS(*address, *cert, *key, handler)
+		err := http.ListenAndServeTLS(*address, *cert, *key, handler)
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -202,5 +262,8 @@ func main() {
 	}
 
 	log.Println("MQ listening on", *address)
-	http.ListenAndServe(*address, handler)
+	err := http.ListenAndServe(*address, handler)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
