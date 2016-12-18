@@ -21,16 +21,6 @@ type mq struct {
 	topics map[string][]chan []byte
 }
 
-var (
-	address = flag.String("address", ":8081", "MQ server address")
-	cert    = flag.String("cert_file", "", "TLS certificate file")
-	key     = flag.String("key_file", "", "TLS key file")
-	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
-	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
-
-	defaultMQ *mq
-)
-
 type writer interface {
 	Write(b []byte) error
 }
@@ -42,6 +32,16 @@ type httpWriter struct {
 type wsWriter struct {
 	conn *websocket.Conn
 }
+
+var (
+	address = flag.String("address", ":8081", "MQ server address")
+	cert    = flag.String("cert_file", "", "TLS certificate file")
+	key     = flag.String("key_file", "", "TLS key file")
+	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
+	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
+
+	defaultMQ *mq
+)
 
 func init() {
 	flag.Parse()
