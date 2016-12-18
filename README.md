@@ -21,6 +21,12 @@ It is used mainly for testing. Purely a toy project.
 go get github.com/asim/mq
 ```
 
+Or with Docker
+
+```shell
+docker run chuhnk/mq
+```
+
 ### Run
 
 Listens on `*:8081`
