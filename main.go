@@ -127,7 +127,6 @@ func pub(w http.ResponseWriter, r *http.Request) {
 func sub(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
 	if err != nil {
-		log.Println("Failed to open websocket connection")
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
 		return
 	}
@@ -135,7 +134,6 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 	ch, err := defaultMQ.sub(topic)
 	if err != nil {
-		log.Printf("Failed to retrieve event for %s topic", topic)
 		http.Error(w, "Could not retrieve events", http.StatusInternalServerError)
 		return
 	}
@@ -145,7 +143,6 @@ func sub(w http.ResponseWriter, r *http.Request) {
 		select {
 		case e := <-ch:
 			if err = conn.WriteMessage(websocket.BinaryMessage, e); err != nil {
-				log.Printf("error sending event: %v", err.Error())
 				return
 			}
 		}
