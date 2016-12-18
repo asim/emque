@@ -121,6 +121,7 @@ Clustering is supported on the client side. Publish/Subscribe operations are per
 c := client.New(
 	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
 )
+```
 
 ### MQ Proxy
 
