@@ -1,6 +1,6 @@
 # MQ
 
-MQ is a simple in-memory message broker which supports http2.
+MQ is a simple in-memory message broker
 
 It is used mainly for testing. Purely a toy project.
 
