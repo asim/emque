@@ -7,7 +7,7 @@ It is used mainly for testing. Purely a toy project.
 ## Features
 
 - In-memory message queue
-- Persist to file per topic
+- Optionally persist to file
 - Client side clustering
 - Proxying MQ cluster
 - Command line client
