@@ -123,7 +123,7 @@ c := client.New(
 )
 ```
 
-### MQ Proxy
+### Proxy
 
 MQ can be run as a proxy for an MQ cluster
 
