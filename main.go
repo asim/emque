@@ -31,6 +31,18 @@ var (
 	defaultMQ *mq
 )
 
+type writer interface {
+	Write(b []byte) error
+}
+
+type httpWriter struct {
+	w http.ResponseWriter
+}
+
+type wsWriter struct {
+	conn *websocket.Conn
+}
+
 func init() {
 	flag.Parse()
 
@@ -66,6 +78,20 @@ func (m *mq) pub(topic string, payload []byte) error {
 	}()
 
 	return nil
+}
+
+func (w *httpWriter) Write(b []byte) error {
+	if _, err := w.w.Write(b); err != nil {
+		return err
+	}
+	if f, ok := w.w.(http.Flusher); ok {
+		f.Flush()
+	}
+	return nil
+}
+
+func (w *wsWriter) Write(b []byte) error {
+	return w.conn.WriteMessage(websocket.BinaryMessage, b)
 }
 
 func (m *mq) sub(topic string) (<-chan []byte, error) {
@@ -125,10 +151,17 @@ func pub(w http.ResponseWriter, r *http.Request) {
 }
 
 func sub(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
-	if err != nil {
-		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
-		return
+	var wr writer
+
+	if u := r.Header.Get("Upgrade"); len(u) == 0 || u != "websocket" {
+		wr = &httpWriter{w}
+	} else {
+		conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
+		if err != nil {
+			http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+			return
+		}
+		wr = &wsWriter{conn}
 	}
 
 	topic := r.URL.Query().Get("topic")
@@ -142,7 +175,7 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case e := <-ch:
-			if err = conn.WriteMessage(websocket.BinaryMessage, e); err != nil {
+			if err = wr.Write(e); err != nil {
 				return
 			}
 		}
