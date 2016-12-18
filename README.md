@@ -54,6 +54,11 @@ Enable TLS
 mq --cert_file=cert.pem --key_file=key.pem
 ```
 
+Persist to file per topic
+```shell
+mq --persist
+```
+
 ### Run Proxy
 
 MQ can be run as a proxy. It will publish or subscribe to all MQ servers.
