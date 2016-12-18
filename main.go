@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,10 +16,16 @@ type mq struct {
 }
 
 var (
+	address = flag.String("address", ":8081", "MQ server address")
+
 	defaultMQ = &mq{
 		topics: make(map[string][]chan []byte),
 	}
 )
+
+func init() {
+	flag.Parse()
+}
 
 func Log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -127,6 +134,6 @@ func main() {
 	http.HandleFunc("/pub", pub)
 	http.HandleFunc("/sub", sub)
 
-	log.Println("MQ listening on :8081")
-	http.ListenAndServe(":8081", Log(http.DefaultServeMux))
+	log.Println("MQ listening on", *address)
+	http.ListenAndServe(*address, Log(http.DefaultServeMux))
 }
