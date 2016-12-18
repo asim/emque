@@ -80,20 +80,6 @@ func (m *mq) pub(topic string, payload []byte) error {
 	return nil
 }
 
-func (w *httpWriter) Write(b []byte) error {
-	if _, err := w.w.Write(b); err != nil {
-		return err
-	}
-	if f, ok := w.w.(http.Flusher); ok {
-		f.Flush()
-	}
-	return nil
-}
-
-func (w *wsWriter) Write(b []byte) error {
-	return w.conn.WriteMessage(websocket.BinaryMessage, b)
-}
-
 func (m *mq) sub(topic string) (<-chan []byte, error) {
 	if *proxy {
 		return m.client.Subscribe(topic)
@@ -132,6 +118,20 @@ func (m *mq) unsub(topic string, sub <-chan []byte) error {
 	m.Unlock()
 
 	return nil
+}
+
+func (w *httpWriter) Write(b []byte) error {
+	if _, err := w.w.Write(b); err != nil {
+		return err
+	}
+	if f, ok := w.w.(http.Flusher); ok {
+		f.Flush()
+	}
+	return nil
+}
+
+func (w *wsWriter) Write(b []byte) error {
+	return w.conn.WriteMessage(websocket.BinaryMessage, b)
 }
 
 func pub(w http.ResponseWriter, r *http.Request) {
