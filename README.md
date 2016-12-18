@@ -8,6 +8,7 @@ It is used mainly for testing. Purely a toy project.
 
 - In-memory message queue
 - Client side clustering
+- Proxying MQ cluster
 - Go client
 - HTTP2
 - TLS
@@ -121,3 +122,10 @@ c := client.New(
 	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
 )
 
+### MQ Proxy
+
+MQ can be run as a proxy for an MQ cluster
+
+```shell
+mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
+```

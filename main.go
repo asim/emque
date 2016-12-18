@@ -5,13 +5,17 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
+	"github.com/asim/mq/go/client"
 	"github.com/gorilla/websocket"
 )
 
 type mq struct {
-	mtx    sync.RWMutex
+	client client.Client
+
+	sync.RWMutex
 	topics map[string][]chan []byte
 }
 
@@ -19,14 +23,23 @@ var (
 	address = flag.String("address", ":8081", "MQ server address")
 	cert    = flag.String("cert_file", "", "TLS certificate file")
 	key     = flag.String("key_file", "", "TLS key file")
+	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
+	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
 
-	defaultMQ = &mq{
-		topics: make(map[string][]chan []byte),
-	}
+	defaultMQ *mq
 )
 
 func init() {
 	flag.Parse()
+
+	if *proxy && len(*servers) == 0 {
+		log.Fatal("Proxy enabled without MQ server list")
+	}
+
+	defaultMQ = &mq{
+		client: client.New(client.WithServers(strings.Split(*servers, ",")...)),
+		topics: make(map[string][]chan []byte),
+	}
 }
 
 func Log(handler http.Handler) http.Handler {
@@ -37,9 +50,13 @@ func Log(handler http.Handler) http.Handler {
 }
 
 func (m *mq) pub(topic string, payload []byte) error {
-	m.mtx.RLock()
+	if *proxy {
+		return m.client.Publish(topic, payload)
+	}
+
+	m.RLock()
 	subscribers, ok := m.topics[topic]
-	m.mtx.RUnlock()
+	m.RUnlock()
 	if !ok {
 		return nil
 	}
@@ -57,17 +74,26 @@ func (m *mq) pub(topic string, payload []byte) error {
 }
 
 func (m *mq) sub(topic string) (<-chan []byte, error) {
+	if *proxy {
+		return m.client.Subscribe(topic)
+	}
+
 	ch := make(chan []byte, 100)
-	m.mtx.Lock()
+	m.Lock()
 	m.topics[topic] = append(m.topics[topic], ch)
-	m.mtx.Unlock()
+	m.Unlock()
 	return ch, nil
 }
 
 func (m *mq) unsub(topic string, sub <-chan []byte) error {
-	m.mtx.RLock()
+	if *proxy {
+		// noop
+		return nil
+	}
+
+	m.RLock()
 	subscribers, ok := m.topics[topic]
-	m.mtx.RUnlock()
+	m.RUnlock()
 
 	if !ok {
 		return nil
@@ -81,9 +107,9 @@ func (m *mq) unsub(topic string, sub <-chan []byte) error {
 		subs = append(subs, subscriber)
 	}
 
-	m.mtx.Lock()
+	m.Lock()
 	m.topics[topic] = subs
-	m.mtx.Unlock()
+	m.Unlock()
 
 	return nil
 }
@@ -133,6 +159,7 @@ func sub(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// MQ Handlers
 	http.HandleFunc("/pub", pub)
 	http.HandleFunc("/sub", sub)
 
@@ -141,6 +168,10 @@ func main() {
 		log.Println("MQ listening on", *address)
 		http.ListenAndServeTLS(*address, *cert, *key, Log(http.DefaultServeMux))
 		return
+	}
+
+	if *proxy {
+		log.Println("Proxy enabled")
 	}
 
 	log.Println("MQ listening on", *address)
