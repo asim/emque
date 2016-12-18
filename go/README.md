@@ -1,6 +1,9 @@
 # Go Library to connect to MQ
 
-## Publish Example
+## Usage
+
+### Publish
+
 ```go
 package main
 
@@ -23,7 +26,7 @@ func main() {
 }
 ```
 
-## Subscribe Example
+### Subscribe
 ```go
 package main
 
@@ -46,4 +49,20 @@ func main() {
 
 	log.Println("channel closed")
 }
+```
+
+### New Client
+
+```go
+// defaults to MQ server localhost:8081
+c := client.New()
+```
+
+### Clustering
+
+Clustering is supported on the client side. Publish/Subscribe operates are performed against all servers.
+```go
+c := client.New(
+	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
+)
 ```

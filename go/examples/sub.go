@@ -1,13 +1,23 @@
 package main
 
 import (
+	"flag"
 	"log"
+	"strings"
 
 	"github.com/asim/mq/go/client"
 )
 
+var (
+	servers = flag.String("servers", "localhost:8081", "Comma separated list of MQ servers")
+)
+
 func main() {
-	ch, err := client.Subscribe("foo")
+	flag.Parse()
+
+	c := client.New(client.WithServers(strings.Split(*servers, ",")...))
+
+	ch, err := c.Subscribe("foo")
 	if err != nil {
 		log.Println(err)
 		return

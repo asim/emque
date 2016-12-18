@@ -2,7 +2,15 @@
 
 MQ is a simple in-memory message broker which supports http2.
 
-It is used mainly for testing. Purely a toy project. Discovery, clustering, etc coming soon.
+It is used mainly for testing. Purely a toy project.
+
+## Features
+
+- In-memory message queue
+- Client side clustering
+- Go client
+- HTTP2
+- TLS
 
 ## Usage
 
