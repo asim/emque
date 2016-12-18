@@ -17,6 +17,8 @@ type mq struct {
 
 var (
 	address = flag.String("address", ":8081", "MQ server address")
+	cert    = flag.String("cert_file", "", "TLS certificate file")
+	key     = flag.String("key_file", "", "TLS key file")
 
 	defaultMQ = &mq{
 		topics: make(map[string][]chan []byte),
@@ -133,6 +135,13 @@ func sub(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/pub", pub)
 	http.HandleFunc("/sub", sub)
+
+	if len(*cert) > 0 && len(*key) > 0 {
+		log.Println("TLS Enabled")
+		log.Println("MQ listening on", *address)
+		http.ListenAndServeTLS(*address, *cert, *key, Log(http.DefaultServeMux))
+		return
+	}
 
 	log.Println("MQ listening on", *address)
 	http.ListenAndServe(*address, Log(http.DefaultServeMux))

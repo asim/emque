@@ -1,28 +1,64 @@
 # MQ
 
-A simplistic pub/sub message queue for testing. Purely a toy project. Discovery, clustering, etc coming soon.
+MQ is a simple in-memory message broker which supports http2.
 
-Subscription uses websockets.
+It is used mainly for testing. Purely a toy project. Discovery, clustering, etc coming soon.
 
-## Pub
+## Usage
+
+### Install
+
+```shell
+go get github.com/asim/mq
+```
+
+### Run
+
+Listens on `*:8081`
+```shell
+mq
+```
+
+Set server address
+```shell
+mq --address=localhost:9091
+```
+
+Enable TLS
+```shell
+mq --cert_file=cert.pem --key_file=key.pem
+```
+
+### Publish
+
+Publish via HTTP
 
 ```
 curl -d "A completely arbitrary message" "http://localhost:8081/pub?topic=foo"
 ```
 
-## Sub
+### Subscribe
+
+Subscribe via websockets
 
 ```
-curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: localhost:8081" -H "Origin:http://localhost:8081" "http://localhost:8081/sub?topic=foo"
+curl -i -N -H "Connection: Upgrade" \
+	-H "Upgrade: websocket" \
+	-H "Host: localhost:8081" \
+	-H "Origin:http://localhost:8081" \
+	"http://localhost:8081/sub?topic=foo"
 ```
 
-## Pub using Go Client
+## Go Client
+
+MQ provides a simple go client
+
+### Publish
 
 ```go
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/asim/mq/go/client"
@@ -33,14 +69,13 @@ func main() {
 
 	for _ = range tick.C {
 		if err := client.Publish("foo", []byte(`bar`)); err != nil {
-			log.Println(err)
 			break
 		}
 	}
 }
 ```
 
-## Sub using Go Client
+### Subscribe
 
 ```go
 package main
@@ -54,14 +89,11 @@ import (
 func main() {
 	ch, err := client.Subscribe("foo")
 	if err != nil {
-		log.Println(err)
 		return
 	}
 
 	for e := range ch {
 		log.Println(string(e))
 	}
-
-	log.Println("channel closed")
 }
 ```
