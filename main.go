@@ -40,6 +40,9 @@ var (
 	cert    = flag.String("cert_file", "", "TLS certificate file")
 	key     = flag.String("key_file", "", "TLS key file")
 
+	// server persist to file
+	persist = flag.Bool("persist", false, "Persist messages to [topic].mq file per topic")
+
 	// proxy flags
 	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
 	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
@@ -82,6 +85,27 @@ func init() {
 	}
 }
 
+func (m *mq) persist(topic string) error {
+	ch, err := m.sub(topic)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(topic+".mq", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for b := range ch {
+			f.Write(b)
+			f.Write([]byte{'\n'})
+		}
+	}()
+
+	return nil
+}
+
 func (m *mq) pub(topic string, payload []byte) error {
 	if *proxy {
 		return m.client.Publish(topic, payload)
@@ -91,7 +115,13 @@ func (m *mq) pub(topic string, payload []byte) error {
 	subscribers, ok := m.topics[topic]
 	m.RUnlock()
 	if !ok {
-		return nil
+		// persist?
+		if !*persist {
+			return nil
+		}
+		if err := m.persist(topic); err != nil {
+			return err
+		}
 	}
 
 	go func() {
