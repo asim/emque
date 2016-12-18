@@ -16,7 +16,7 @@ It is used mainly for testing. Purely a toy project.
 
 ## Architecture
 
-- MQ servers are standalone servers with in-memory queues and a HTTP API
+- MQ servers are standalone servers with in-memory queues and provide a HTTP API
 - MQ clients cluster MQ servers by publish/subscribing to all servers
 - MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
 
