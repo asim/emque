@@ -1,4 +1,4 @@
-# Go Library to connect to MQ
+# Go Client
 
 ## Usage
 
