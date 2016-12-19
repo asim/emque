@@ -1,6 +1,6 @@
 # MQ [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Travis CI](https://travis-ci.org/asim/mq.svg?branch=master)](https://travis-ci.org/asim/mq) 
 
-MQ is a simple in-memory message broker
+MQ is a simple distributed in-memory message broker
 
 ## Features
 
