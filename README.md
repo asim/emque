@@ -2,8 +2,6 @@
 
 MQ is a simple in-memory message broker
 
-It is used mainly for testing. Purely a toy project.
-
 ## Features
 
 - In-memory message queue
