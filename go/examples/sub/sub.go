@@ -15,7 +15,9 @@ var (
 func main() {
 	flag.Parse()
 
-	c := client.New(client.WithServers(strings.Split(*servers, ",")...))
+	c := client.New(
+		client.WithServers(strings.Split(*servers, ",")...),
+	)
 
 	ch, err := c.Subscribe("foo")
 	if err != nil {
@@ -24,7 +26,7 @@ func main() {
 	}
 	defer c.Unsubscribe(ch)
 
-	for i := 0; i < 10; i++ {
+	for {
 		select {
 		case e := <-ch:
 			log.Println(string(e))

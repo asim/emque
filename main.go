@@ -54,6 +54,9 @@ var (
 	subscribe = flag.Bool("subscribe", false, "Subscribe via the MQ client")
 	topic     = flag.String("topic", "", "Topic for client to publish or subscribe to")
 
+	// select strategy
+	selector = flag.String("select", "all", "Server select strategy. Supports all, shard")
+
 	defaultMQ *mq
 )
 
@@ -80,8 +83,18 @@ func init() {
 		log.Fatal("Client specified without MQ server list")
 	}
 
+	var selecter mqclient.Selector
+
+	switch *selector {
+	case "shard":
+		selecter = new(mqclient.SelectShard)
+	default:
+		selecter = new(mqclient.SelectAll)
+	}
+
 	defaultMQ = &mq{
 		client: mqclient.New(
+			mqclient.WithSelector(selecter),
 			mqclient.WithServers(strings.Split(*servers, ",")...),
 			mqclient.WithRetries(*retries),
 		),

@@ -7,7 +7,8 @@ MQ is a simple distributed in-memory message broker
 - In-memory message queue
 - Optionally persist to file
 - Client side clustering
-- Proxying MQ cluster
+- Client side sharding
+- Cluster proxying
 - Command line client
 - Go client library
 - HTTP2
@@ -67,6 +68,12 @@ MQ can be run as a proxy. It will publish or subscribe to all MQ servers.
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
+```
+
+Shard requests to a single server
+
+```shell
+mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083 --select=shard
 ```
 
 ### Run Client
@@ -147,3 +154,13 @@ c := client.New(
 )
 ```
 
+### Sharding
+
+Sharding is supported via client much like gomemcache. Publish/Subscribe operations are performed against a single server.
+
+```go
+c := client.New(
+	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
+	client.WithSelector(new(client.SelectShard)),
+)
+```

@@ -16,7 +16,9 @@ var (
 func main() {
 	flag.Parse()
 
-	c := client.New(client.WithServers(strings.Split(*servers, ",")...))
+	c := client.New(
+		client.WithServers(strings.Split(*servers, ",")...),
+	)
 	tick := time.NewTicker(time.Second)
 
 	for _ = range tick.C {

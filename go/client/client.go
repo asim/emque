@@ -10,15 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var (
-	// The default client
-	Default = newClient()
-	// The default server list
-	Servers = []string{"http://127.0.0.1:8081"}
-	// The default number of retries
-	Retries = 1
-)
-
 // internal client
 type client struct {
 	options Options
@@ -42,10 +33,26 @@ type Client interface {
 	Unsubscribe(<-chan []byte) error
 }
 
+// Selector provides a server list to publish/subscribe to
+type Selector interface {
+	Get(topic string) ([]string, error)
+	Set(servers ...string) error
+}
+
+var (
+	// The default client
+	Default = newClient()
+	// The default server list
+	Servers = []string{"http://127.0.0.1:8081"}
+	// The default number of retries
+	Retries = 1
+)
+
 func newClient(opts ...Option) *client {
 	options := Options{
-		Servers: Servers,
-		Retries: Retries,
+		Selector: new(SelectAll),
+		Servers:  Servers,
+		Retries:  Retries,
 	}
 
 	for _, o := range opts {
@@ -63,6 +70,7 @@ func newClient(opts ...Option) *client {
 
 	// set servers
 	WithServers(servers...)(&options)
+	options.Selector.Set(options.Servers...)
 
 	return &client{
 		options:     options,
@@ -119,8 +127,13 @@ func subscribe(addr string, s *subscriber) error {
 }
 
 func (c *client) Publish(topic string, payload []byte) error {
+	servers, err := c.options.Selector.Get(topic)
+	if err != nil {
+		return err
+	}
+
 	var grr error
-	for _, addr := range c.options.Servers {
+	for _, addr := range servers {
 		for i := 0; i < 1+c.options.Retries; i++ {
 			err := publish(addr, topic, payload)
 			if err == nil {
@@ -133,6 +146,11 @@ func (c *client) Publish(topic string, payload []byte) error {
 }
 
 func (c *client) Subscribe(topic string) (<-chan []byte, error) {
+	servers, err := c.options.Selector.Get(topic)
+	if err != nil {
+		return nil, err
+	}
+
 	ch := make(chan []byte, len(c.options.Servers)*100)
 
 	s := &subscriber{
@@ -142,7 +160,7 @@ func (c *client) Subscribe(topic string) (<-chan []byte, error) {
 	}
 
 	var grr error
-	for _, addr := range c.options.Servers {
+	for _, addr := range servers {
 		for i := 0; i < 1+c.options.Retries; i++ {
 			err := subscribe(addr, s)
 			if err == nil {
