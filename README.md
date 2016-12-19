@@ -18,7 +18,7 @@ MQ is a simple distributed in-memory message broker
 ## Architecture
 
 - MQ servers are standalone servers with in-memory queues and provide a HTTP API
-- MQ clients cluster MQ servers by publish/subscribing to all servers
+- MQ clients shard or cluster MQ servers by publish/subscribing to one or all servers
 - MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
 
 Because of this simplistic architecture, proxies and servers can be chained to build message pipelines.
