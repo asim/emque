@@ -23,6 +23,10 @@ It is used mainly for testing. Purely a toy project.
 
 Because of this simplistic architecture, proxies and servers can be chained to build message pipelines.
 
+<p align="center">
+  <img src="mq.png" />
+</p>
+
 ## Usage
 
 ### Install
