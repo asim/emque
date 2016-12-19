@@ -33,10 +33,10 @@ Because of this simplistic architecture, proxies and servers can be chained to b
 go get github.com/asim/mq
 ```
 
-Or with Docker
+With docker
 
 ```shell
-docker run chuhnk/mq
+docker pull chuhnk/mq
 ```
 
 ### Run Server
