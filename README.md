@@ -5,10 +5,11 @@ MQ is a simple distributed in-memory message broker
 ## Features
 
 - In-memory message queue
-- Optionally persist to file
-- Client side clustering
-- Client side sharding
-- Cluster proxying
+- Clustering
+- Sharding
+- Proxying
+- Auto retries
+- Optional: persist to file
 - Command line client
 - Go client library
 - HTTP2
