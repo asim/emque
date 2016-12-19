@@ -15,6 +15,8 @@ var (
 	Default = newClient()
 	// The default server list
 	Servers = []string{"http://127.0.0.1:8081"}
+	// The default number of retries
+	Retries = 1
 )
 
 // internal client
@@ -43,6 +45,7 @@ type Client interface {
 func newClient(opts ...Option) *client {
 	options := Options{
 		Servers: Servers,
+		Retries: Retries,
 	}
 
 	for _, o := range opts {
@@ -118,7 +121,11 @@ func subscribe(addr string, s *subscriber) error {
 func (c *client) Publish(topic string, payload []byte) error {
 	var grr error
 	for _, addr := range c.options.Servers {
-		if err := publish(addr, topic, payload); err != nil {
+		for i := 0; i < 1+c.options.Retries; i++ {
+			err := publish(addr, topic, payload)
+			if err == nil {
+				break
+			}
 			grr = err
 		}
 	}
@@ -136,11 +143,14 @@ func (c *client) Subscribe(topic string) (<-chan []byte, error) {
 
 	var grr error
 	for _, addr := range c.options.Servers {
-		if err := subscribe(addr, s); err != nil {
+		for i := 0; i < 1+c.options.Retries; i++ {
+			err := subscribe(addr, s)
+			if err == nil {
+				s.wg.Add(1)
+				break
+			}
 			grr = err
-			continue
 		}
-		s.wg.Add(1)
 	}
 
 	return ch, grr

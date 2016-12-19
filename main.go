@@ -45,6 +45,7 @@ var (
 
 	// proxy flags
 	proxy   = flag.Bool("proxy", false, "Proxy for an MQ cluster")
+	retries = flag.Int("retries", 1, "Number of retries for publish or subscribe")
 	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
 
 	// client flags
@@ -80,7 +81,10 @@ func init() {
 	}
 
 	defaultMQ = &mq{
-		client: mqclient.New(mqclient.WithServers(strings.Split(*servers, ",")...)),
+		client: mqclient.New(
+			mqclient.WithServers(strings.Split(*servers, ",")...),
+			mqclient.WithRetries(*retries),
+		),
 		topics: make(map[string][]chan []byte),
 	}
 }
