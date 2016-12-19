@@ -103,53 +103,31 @@ curl -i -N -H "Connection: Upgrade" \
 	"http://localhost:8081/sub?topic=foo"
 ```
 
-## Go Client
+## Go Client [![GoDoc](https://godoc.org/github.com/asim/mq/go/client?status.svg)](https://godoc.org/github.com/asim/mq/go/client)
 
 MQ provides a simple go client
+
+```go
+import "github.com/asim/mq/go/client"
+```
 
 ### Publish
 
 ```go
-package main
-
-import (
-	"time"
-
-	"github.com/asim/mq/go/client"
-)
-
-func main() {
-	tick := time.NewTicker(time.Second)
-
-	for _ = range tick.C {
-		if err := client.Publish("foo", []byte(`bar`)); err != nil {
-			break
-		}
-	}
-}
+// publish to topic foo
+err := client.Publish("foo", []byte(`bar`))
 ```
 
 ### Subscribe
 
 ```go
-package main
-
-import (
-	"log"
-
-	"github.com/asim/mq/go/client"
-)
-
-func main() {
-	ch, err := client.Subscribe("foo")
-	if err != nil {
-		return
-	}
-
-	for e := range ch {
-		log.Println(string(e))
-	}
+// subscribe to topic foo
+ch, err := client.Subscribe("foo")
+if err != nil {
+	return
 }
+
+data := <-ch
 ```
 
 ### New Client
