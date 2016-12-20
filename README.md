@@ -65,13 +65,15 @@ mq --persist
 
 ### Run Proxy
 
-MQ can be run as a proxy. It will publish or subscribe to all MQ servers.
+MQ can be run as a proxy which includes clustering, sharding and auto retry features.
+
+Clustering: Publish and subscribe to all MQ servers
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
 ```
 
-Shard requests to a single server
+Sharding: Requests are sent to a single server based on topic
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083 --select=shard
