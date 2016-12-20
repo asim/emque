@@ -294,23 +294,23 @@ func main() {
 	// logging handler
 	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
 
+	// proxy enabled
+	if *proxy {
+		log.Println("Proxy enabled")
+	}
+
+	// tls enabled
 	if len(*cert) > 0 && len(*key) > 0 {
 		log.Println("TLS Enabled")
 		log.Println("MQ listening on", *address)
-		err := http.ListenAndServeTLS(*address, *cert, *key, handler)
-		if err != nil {
+		if err := http.ListenAndServeTLS(*address, *cert, *key, handler); err != nil {
 			log.Fatal(err)
 		}
 		return
 	}
 
-	if *proxy {
-		log.Println("Proxy enabled")
-	}
-
 	log.Println("MQ listening on", *address)
-	err := http.ListenAndServe(*address, handler)
-	if err != nil {
+	if err := http.ListenAndServe(*address, handler); err != nil {
 		log.Fatal(err)
 	}
 }
