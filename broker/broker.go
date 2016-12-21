@@ -1,8 +1,10 @@
 package broker
 
 import (
+	"encoding/json"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/asim/mq/go/client"
 )
@@ -17,6 +19,16 @@ type broker struct {
 
 	sync.RWMutex
 	topics map[string][]chan []byte
+
+	mtx       sync.RWMutex
+	persisted map[string]bool
+}
+
+// internal message for persistence
+type message struct {
+	Timestamp int64  `json:"timestamp"`
+	Topic     string `json:"topic"`
+	Payload   []byte `json:"payload"`
 }
 
 // Broker is the message broker
@@ -36,12 +48,20 @@ func newBroker(opts ...Option) *broker {
 	}
 
 	return &broker{
-		options: options,
-		topics:  make(map[string][]chan []byte),
+		options:   options,
+		topics:    make(map[string][]chan []byte),
+		persisted: make(map[string]bool),
 	}
 }
 
 func (b *broker) persist(topic string) error {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if b.persisted[topic] {
+		return nil
+	}
+
 	ch, err := b.Subscribe(topic)
 	if err != nil {
 		return err
@@ -53,11 +73,21 @@ func (b *broker) persist(topic string) error {
 	}
 
 	go func() {
-		for b := range ch {
+		for p := range ch {
+			b, err := json.Marshal(&message{
+				Timestamp: time.Now().UnixNano(),
+				Topic:     topic,
+				Payload:   p,
+			})
+			if err != nil {
+				continue
+			}
 			f.Write(b)
 			f.Write([]byte{'\n'})
 		}
 	}()
+
+	b.persisted[topic] = true
 
 	return nil
 }

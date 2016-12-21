@@ -76,6 +76,7 @@ func init() {
 			mqclient.WithServers(strings.Split(*servers, ",")...),
 			mqclient.WithRetries(*retries),
 		)),
+		broker.Persist(*persist),
 		broker.Proxy(*client || *proxy),
 	)
 }
