@@ -117,8 +117,7 @@ func subscribe(addr string, s *subscriber) error {
 			case <-s.exit:
 				c.Close()
 				return
-			default:
-				s.ch <- p
+			case s.ch <- p:
 			}
 		}
 	}()
@@ -151,7 +150,7 @@ func (c *client) Subscribe(topic string) (<-chan []byte, error) {
 		return nil, err
 	}
 
-	ch := make(chan []byte, len(c.options.Servers)*100)
+	ch := make(chan []byte, len(c.options.Servers)*256)
 
 	s := &subscriber{
 		ch:    ch,
