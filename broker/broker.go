@@ -73,17 +73,31 @@ func (b *broker) persist(topic string) error {
 	}
 
 	go func() {
-		for p := range ch {
-			b, err := json.Marshal(&message{
-				Timestamp: time.Now().UnixNano(),
-				Topic:     topic,
-				Payload:   p,
-			})
-			if err != nil {
-				continue
+		var pending []byte
+		newline := []byte{'\n'}
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+
+		for {
+			select {
+			case p := <-ch:
+				b, err := json.Marshal(&message{
+					Timestamp: time.Now().UnixNano(),
+					Topic:     topic,
+					Payload:   p,
+				})
+				if err != nil {
+					continue
+				}
+				pending = append(pending, b...)
+				pending = append(pending, newline...)
+			case <-t.C:
+				if len(pending) == 0 {
+					continue
+				}
+				f.Write(pending)
+				pending = nil
 			}
-			f.Write(b)
-			f.Write([]byte{'\n'})
 		}
 	}()
 
