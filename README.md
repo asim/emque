@@ -17,10 +17,8 @@ MQ is a simple distributed in-memory message broker
 
 ## API
 
-```shell
-/pub?topic=string	publish payload as body
-/sub?topic=string	subscribe as websocket
-```
+- /pub?topic=string	publish payload as body
+- /sub?topic=string	subscribe as websocket
 
 ## Architecture
 
