@@ -54,6 +54,37 @@ func newBroker(opts ...Option) *broker {
 	}
 }
 
+func publish(payload []byte, subscribers []chan []byte) {
+	n := len(subscribers)
+	c := 1
+
+	// increase concurrency if there are many subscribers
+	switch {
+	case n > 1000:
+		c = 3
+	case n > 100:
+		c = 2
+	}
+
+	// publisher function
+	pub := func(start int) {
+		// iterate the subscribers
+		for j := start; j < n; j += c {
+			select {
+			// push the payload to subscriber
+			case subscribers[j] <- payload:
+			// only wait 5 milliseconds for subscriber
+			case <-time.After(time.Millisecond * 5):
+			}
+		}
+	}
+
+	// concurrent publish
+	for i := 0; i < c; i++ {
+		go pub(i)
+	}
+}
+
 func (b *broker) persist(topic string) error {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
@@ -124,14 +155,7 @@ func (b *broker) Publish(topic string, payload []byte) error {
 		}
 	}
 
-	go func() {
-		for _, subscriber := range subscribers {
-			select {
-			case subscriber <- payload:
-			default:
-			}
-		}
-	}()
+	publish(payload, subscribers)
 
 	return nil
 }
