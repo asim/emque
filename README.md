@@ -15,6 +15,13 @@ MQ is a simple distributed in-memory message broker
 - HTTP2
 - TLS
 
+## API
+
+```shell
+/pub?topic=string	publish payload as body
+/sub?topic=string	subscribe as websocket
+```
+
 ## Architecture
 
 - MQ servers are standalone servers with in-memory queues and provide a HTTP API
