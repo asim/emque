@@ -186,3 +186,15 @@ c := client.New(
 	client.WithSelector(new(client.SelectShard)),
 )
 ```
+### Resolver
+
+A name resolver can be used to discover the ip addresses of MQ servers
+
+```go
+c := client.New(
+	// use the DNS resolver
+	client.WithResolver(new(client.DNSResolver)),
+	// specify DNS name as server
+	client.WithServers("mq.proxy.local"),
+)
+```
