@@ -15,6 +15,7 @@ var (
 
 // internal broker
 type broker struct {
+	exit    chan bool
 	options *Options
 
 	sync.RWMutex
@@ -33,6 +34,7 @@ type message struct {
 
 // Broker is the message broker
 type Broker interface {
+	Close() error
 	Publish(topic string, payload []byte) error
 	Subscribe(topic string) (<-chan []byte, error)
 	Unsubscribe(topic string, sub <-chan []byte) error
@@ -48,6 +50,7 @@ func newBroker(opts ...Option) *broker {
 	}
 
 	return &broker{
+		exit:      make(chan bool),
 		options:   options,
 		topics:    make(map[string][]chan []byte),
 		persisted: make(map[string]bool),
@@ -108,6 +111,7 @@ func (b *broker) persist(topic string) error {
 		newline := []byte{'\n'}
 		t := time.NewTicker(time.Second)
 		defer t.Stop()
+		defer f.Close()
 
 		for {
 			select {
@@ -128,12 +132,24 @@ func (b *broker) persist(topic string) error {
 				}
 				f.Write(pending)
 				pending = nil
+			case <-b.exit:
+				return
 			}
 		}
 	}()
 
 	b.persisted[topic] = true
 
+	return nil
+}
+
+func (b *broker) Close() error {
+	select {
+	case <-b.exit:
+		return nil
+	default:
+		close(b.exit)
+	}
 	return nil
 }
 
@@ -156,7 +172,6 @@ func (b *broker) Publish(topic string, payload []byte) error {
 	}
 
 	publish(payload, subscribers)
-
 	return nil
 }
 

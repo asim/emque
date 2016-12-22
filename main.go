@@ -115,6 +115,9 @@ func main() {
 		return
 	}
 
+	// cleanup broker
+	defer broker.Default.Close()
+
 	// MQ Handlers
 	http.HandleFunc("/pub", handler.Pub)
 	http.HandleFunc("/sub", handler.Sub)
@@ -137,6 +140,7 @@ func main() {
 		return
 	}
 
+	// plain server
 	log.Println("MQ listening on", *address)
 	if err := http.ListenAndServe(*address, handler); err != nil {
 		log.Fatal(err)
