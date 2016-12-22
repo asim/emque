@@ -3,6 +3,8 @@ package client
 type Options struct {
 	// Number of retry attempts
 	Retries int
+	// Resolver
+	Resolver Resolver
 	// Server list
 	Servers []string
 	// Selector
@@ -15,6 +17,13 @@ type Option func(o *Options)
 func WithRetries(i int) Option {
 	return func(o *Options) {
 		o.Retries = i
+	}
+}
+
+// WithResolver sets the resolver used to get the server list
+func WithResolver(r Resolver) Option {
+	return func(o *Options) {
+		o.Resolver = r
 	}
 }
 

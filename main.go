@@ -36,6 +36,8 @@ var (
 
 	// select strategy
 	selector = flag.String("select", "all", "Server select strategy. Supports all, shard")
+	// resolver for discovery
+	resolver = flag.String("resolver", "ip", "Server resolver for discovery. Supports ip, dns")
 )
 
 func init() {
@@ -70,8 +72,17 @@ func init() {
 		selecter = new(mqclient.SelectAll)
 	}
 
+	var resolvor mqclient.Resolver
+
+	switch *resolver {
+	case "dns":
+		resolvor = new(mqclient.DNSResolver)
+	default:
+	}
+
 	broker.Default = broker.New(
 		broker.Client(mqclient.New(
+			mqclient.WithResolver(resolvor),
 			mqclient.WithSelector(selecter),
 			mqclient.WithServers(strings.Split(*servers, ",")...),
 			mqclient.WithRetries(*retries),

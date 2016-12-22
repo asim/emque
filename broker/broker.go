@@ -42,12 +42,13 @@ type Broker interface {
 }
 
 func newBroker(opts ...Option) *broker {
-	options := &Options{
-		Client: client.New(),
-	}
-
+	options := new(Options)
 	for _, o := range opts {
 		o(options)
+	}
+
+	if options.Client == nil {
+		options.Client = client.New()
 	}
 
 	return &broker{
@@ -155,6 +156,7 @@ func (b *broker) Close() error {
 		b.Lock()
 		b.topics = make(map[string][]chan []byte)
 		b.Unlock()
+		b.options.Client.Close()
 	}
 	return nil
 }

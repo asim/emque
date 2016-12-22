@@ -2,16 +2,19 @@ package client
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 // internal client
 type client struct {
+	exit    chan bool
 	options Options
 
 	sync.RWMutex
@@ -28,9 +31,15 @@ type subscriber struct {
 
 // Client is the interface provided by this package
 type Client interface {
+	Close() error
 	Publish(topic string, payload []byte) error
 	Subscribe(topic string) (<-chan []byte, error)
 	Unsubscribe(<-chan []byte) error
+}
+
+// Resolver resolves a name to a list of servers
+type Resolver interface {
+	Resolve(name string) ([]string, error)
 }
 
 // Selector provides a server list to publish/subscribe to
@@ -72,10 +81,13 @@ func newClient(opts ...Option) *client {
 	WithServers(servers...)(&options)
 	options.Selector.Set(options.Servers...)
 
-	return &client{
+	c := &client{
+		exit:        make(chan bool),
 		options:     options,
 		subscribers: make(map[<-chan []byte]*subscriber),
 	}
+	go c.run()
+	return c
 }
 
 func publish(addr, topic string, payload []byte) error {
@@ -125,7 +137,66 @@ func subscribe(addr string, s *subscriber) error {
 	return nil
 }
 
+func (c *client) run() {
+	// is there a resolver?
+	if c.options.Resolver == nil {
+		return
+	}
+
+	t := time.NewTicker(time.Second * 30)
+	defer t.Stop()
+
+	for {
+		select {
+		case <-t.C:
+			var servers []string
+
+			// iterate names
+			for _, server := range c.options.Servers {
+				ips, err := c.options.Resolver.Resolve(server)
+				if err != nil {
+					continue
+				}
+				for i, ip := range ips {
+					if !strings.HasPrefix(ip, "http") {
+						ips[i] = fmt.Sprintf("http://%s", ip)
+					}
+				}
+				servers = append(servers, ips...)
+			}
+
+			// only set if we have servers
+			if len(servers) > 0 {
+				c.options.Selector.Set(servers...)
+			}
+		case <-c.exit:
+			return
+		}
+	}
+}
+
+func (c *client) Close() error {
+	select {
+	case <-c.exit:
+		return nil
+	default:
+		close(c.exit)
+		c.Lock()
+		for _, sub := range c.subscribers {
+			sub.Close()
+		}
+		c.Unlock()
+	}
+	return nil
+}
+
 func (c *client) Publish(topic string, payload []byte) error {
+	select {
+	case <-c.exit:
+		return errors.New("client closed")
+	default:
+	}
+
 	servers, err := c.options.Selector.Get(topic)
 	if err != nil {
 		return err
@@ -145,6 +216,12 @@ func (c *client) Publish(topic string, payload []byte) error {
 }
 
 func (c *client) Subscribe(topic string) (<-chan []byte, error) {
+	select {
+	case <-c.exit:
+		return nil, errors.New("client closed")
+	default:
+	}
+
 	servers, err := c.options.Selector.Get(topic)
 	if err != nil {
 		return nil, err
@@ -174,6 +251,12 @@ func (c *client) Subscribe(topic string) (<-chan []byte, error) {
 }
 
 func (c *client) Unsubscribe(ch <-chan []byte) error {
+	select {
+	case <-c.exit:
+		return errors.New("client closed")
+	default:
+	}
+
 	c.Lock()
 	defer c.Unlock()
 	if sub, ok := c.subscribers[ch]; ok {

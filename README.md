@@ -8,6 +8,7 @@ MQ is a simple distributed in-memory message broker
 - Clustering
 - Sharding
 - Proxying
+- Discovery
 - Auto retries
 - Optional: persist to file
 - Command line client
@@ -89,6 +90,12 @@ Sharding: Requests are sent to a single server based on topic
 
 ```shell
 mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083 --select=shard
+```
+
+Resolver: Use a name resolver rather than specifying server ips
+
+```shell
+mq --proxy --resolver=dns --servers=mq.proxy.dev
 ```
 
 ### Run Client
