@@ -57,7 +57,7 @@ func newBroker(opts ...Option) *broker {
 	}
 }
 
-func publish(payload []byte, subscribers []chan []byte) {
+func (b *broker) publish(payload []byte, subscribers []chan []byte) {
 	n := len(subscribers)
 	c := 1
 
@@ -78,6 +78,8 @@ func publish(payload []byte, subscribers []chan []byte) {
 			case subscribers[j] <- payload:
 			// only wait 5 milliseconds for subscriber
 			case <-time.After(time.Millisecond * 5):
+			case <-b.exit:
+				return
 			}
 		}
 	}
@@ -149,6 +151,9 @@ func (b *broker) Close() error {
 		return nil
 	default:
 		close(b.exit)
+		b.Lock()
+		b.topics = make(map[string][]chan []byte)
+		b.Unlock()
 	}
 	return nil
 }
@@ -171,7 +176,7 @@ func (b *broker) Publish(topic string, payload []byte) error {
 		}
 	}
 
-	publish(payload, subscribers)
+	b.publish(payload, subscribers)
 	return nil
 }
 
