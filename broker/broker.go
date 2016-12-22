@@ -2,6 +2,7 @@ package broker
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"sync"
 	"time"
@@ -159,6 +160,12 @@ func (b *broker) Close() error {
 }
 
 func (b *broker) Publish(topic string, payload []byte) error {
+	select {
+	case <-b.exit:
+		return errors.New("broker closed")
+	default:
+	}
+
 	if b.options.Proxy {
 		return b.options.Client.Publish(topic, payload)
 	}
@@ -181,6 +188,12 @@ func (b *broker) Publish(topic string, payload []byte) error {
 }
 
 func (b *broker) Subscribe(topic string) (<-chan []byte, error) {
+	select {
+	case <-b.exit:
+		return nil, errors.New("broker closed")
+	default:
+	}
+
 	if b.options.Proxy {
 		return b.options.Client.Subscribe(topic)
 	}
@@ -193,6 +206,12 @@ func (b *broker) Subscribe(topic string) (<-chan []byte, error) {
 }
 
 func (b *broker) Unsubscribe(topic string, sub <-chan []byte) error {
+	select {
+	case <-b.exit:
+		return errors.New("broker closed")
+	default:
+	}
+
 	if b.options.Proxy {
 		return b.options.Client.Unsubscribe(sub)
 	}
