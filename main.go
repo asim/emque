@@ -13,6 +13,8 @@ import (
 	"github.com/asim/mq/broker"
 	mqclient "github.com/asim/mq/go/client"
 	mqgrpc "github.com/asim/mq/go/client/grpc"
+	mqresolver "github.com/asim/mq/go/client/resolver"
+	mqselector "github.com/asim/mq/go/client/selector"
 	"github.com/asim/mq/handler"
 	"github.com/asim/mq/proto/grpc/mq"
 	"github.com/gorilla/handlers"
@@ -76,14 +78,14 @@ func init() {
 
 	switch *selector {
 	case "shard":
-		selecter = new(mqclient.SelectShard)
+		selecter = new(mqselector.Shard)
 	default:
-		selecter = new(mqclient.SelectAll)
+		selecter = new(mqselector.All)
 	}
 
 	switch *resolver {
 	case "dns":
-		resolvor = new(mqclient.DNSResolver)
+		resolvor = new(mqresolver.DNS)
 	default:
 	}
 

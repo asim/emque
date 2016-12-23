@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/asim/mq/go/client"
+	"github.com/asim/mq/go/client/selector"
 	"github.com/asim/mq/proto/grpc/mq"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -237,7 +238,7 @@ func (s *subscriber) Close() error {
 // New returns a grpc Client
 func New(opts ...client.Option) *grpcClient {
 	options := client.Options{
-		Selector: new(client.SelectAll),
+		Selector: new(selector.All),
 		Servers:  client.Servers,
 		Retries:  client.Retries,
 	}

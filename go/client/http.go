@@ -29,6 +29,12 @@ type subscriber struct {
 	topic string
 }
 
+// internal select all
+type all struct {
+	sync.RWMutex
+	servers []string
+}
+
 func publish(addr, topic string, payload []byte) error {
 	url := fmt.Sprintf("%s/pub?topic=%s", addr, topic)
 	rsp, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
@@ -80,6 +86,24 @@ func subscribe(addr string, s *subscriber) error {
 		}
 	}()
 
+	return nil
+}
+
+func (sa *all) Get(topic string) ([]string, error) {
+	sa.RLock()
+	if len(sa.servers) == 0 {
+		sa.RUnlock()
+		return nil, errors.New("no servers")
+	}
+	servers := sa.servers
+	sa.RUnlock()
+	return servers, nil
+}
+
+func (sa *all) Set(servers ...string) error {
+	sa.Lock()
+	sa.servers = servers
+	sa.Unlock()
 	return nil
 }
 
@@ -224,7 +248,7 @@ func (s *subscriber) Close() error {
 // newHTTPClient returns a http Client
 func newHTTPClient(opts ...Option) *httpClient {
 	options := Options{
-		Selector: new(SelectAll),
+		Selector: new(all),
 		Servers:  Servers,
 		Retries:  Retries,
 	}

@@ -1,4 +1,4 @@
-package client
+package selector
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestSelectAll(t *testing.T) {
 	testServers := []string{"a", "b", "c"}
-	sa := new(SelectAll)
+	sa := new(All)
 	if err := sa.Set(testServers...); err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestSelectAll(t *testing.T) {
 
 func TestSelectShard(t *testing.T) {
 	testServers := []string{"a", "b", "c"}
-	ss := new(SelectShard)
+	ss := new(Shard)
 	if err := ss.Set(testServers...); err != nil {
 		t.Fatal(err)
 	}

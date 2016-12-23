@@ -194,9 +194,11 @@ c := client.New(
 Sharding is supported via client much like gomemcache. Publish/Subscribe operations are performed against a single server.
 
 ```go
+import "github.com/asim/mq/go/client/selector"
+
 c := client.New(
 	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
-	client.WithSelector(new(client.SelectShard)),
+	client.WithSelector(new(selector.Shard)),
 )
 ```
 ### Resolver
@@ -204,9 +206,11 @@ c := client.New(
 A name resolver can be used to discover the ip addresses of MQ servers
 
 ```go
+import "github.com/asim/mq/go/client/resolver"
+
 c := client.New(
 	// use the DNS resolver
-	client.WithResolver(new(client.DNSResolver)),
+	client.WithResolver(new(resolver.DNS)),
 	// specify DNS name as server
 	client.WithServers("mq.proxy.local"),
 )

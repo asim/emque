@@ -1,4 +1,4 @@
-package client
+package selector
 
 import (
 	"errors"
@@ -6,19 +6,19 @@ import (
 	"sync"
 )
 
-// SelectAll is a Selector that returns all servers
-type SelectAll struct {
+// All is a Selector that returns all servers
+type All struct {
 	sync.RWMutex
 	servers []string
 }
 
-// SelectShard is a Selector that shards to a single server
-type SelectShard struct {
+// Shard is a Selector that shards to a single server
+type Shard struct {
 	sync.RWMutex
 	servers []string
 }
 
-func (sa *SelectAll) Get(topic string) ([]string, error) {
+func (sa *All) Get(topic string) ([]string, error) {
 	sa.RLock()
 	if len(sa.servers) == 0 {
 		sa.RUnlock()
@@ -29,14 +29,14 @@ func (sa *SelectAll) Get(topic string) ([]string, error) {
 	return servers, nil
 }
 
-func (sa *SelectAll) Set(servers ...string) error {
+func (sa *All) Set(servers ...string) error {
 	sa.Lock()
 	sa.servers = servers
 	sa.Unlock()
 	return nil
 }
 
-func (ss *SelectShard) Get(topic string) ([]string, error) {
+func (ss *Shard) Get(topic string) ([]string, error) {
 	ss.RLock()
 	length := len(ss.servers)
 	if length == 0 {
@@ -54,7 +54,7 @@ func (ss *SelectShard) Get(topic string) ([]string, error) {
 	return []string{server}, nil
 }
 
-func (ss *SelectShard) Set(servers ...string) error {
+func (ss *Shard) Set(servers ...string) error {
 	ss.Lock()
 	ss.servers = servers
 	ss.Unlock()
