@@ -12,6 +12,7 @@ import (
 
 	"github.com/asim/mq/broker"
 	mqclient "github.com/asim/mq/go/client"
+	mqgrpc "github.com/asim/mq/go/client/grpc"
 	"github.com/asim/mq/handler"
 	"github.com/asim/mq/proto/grpc/mq"
 	"github.com/gorilla/handlers"
@@ -95,9 +96,9 @@ func init() {
 
 	switch *transport {
 	case "grpc":
-		bclient = mqclient.NewGRPCClient(options...)
+		bclient = mqgrpc.New(options...)
 	default:
-		bclient = mqclient.NewHTTPClient(options...)
+		bclient = mqclient.New(options...)
 	}
 
 	broker.Default = broker.New(

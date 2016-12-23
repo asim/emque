@@ -61,7 +61,9 @@ c := client.New()
 gRPC client
 
 ```go
-c := client.NewGRPCClient()
+import "github.com/asim/mq/go/client/grpc"
+
+c := grpc.New()
 ```
 
 ### Clustering

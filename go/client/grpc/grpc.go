@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/asim/mq/go/client"
 	"github.com/asim/mq/proto/grpc/mq"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -14,10 +15,18 @@ import (
 // internal grpcClient
 type grpcClient struct {
 	exit    chan bool
-	options Options
+	options client.Options
 
 	sync.RWMutex
 	subscribers map[<-chan []byte]*subscriber
+}
+
+// internal subscriber
+type subscriber struct {
+	wg    sync.WaitGroup
+	ch    chan<- []byte
+	exit  chan bool
+	topic string
 }
 
 func grpcPublish(addr, topic string, payload []byte) error {
@@ -215,12 +224,22 @@ func (c *grpcClient) Unsubscribe(ch <-chan []byte) error {
 	return nil
 }
 
-// NewGRPCClient returns a grpc Client
-func NewGRPCClient(opts ...Option) *grpcClient {
-	options := Options{
-		Selector: new(SelectAll),
-		Servers:  Servers,
-		Retries:  Retries,
+func (s *subscriber) Close() error {
+	select {
+	case <-s.exit:
+	default:
+		close(s.exit)
+		s.wg.Wait()
+	}
+	return nil
+}
+
+// New returns a grpc Client
+func New(opts ...client.Option) *grpcClient {
+	options := client.Options{
+		Selector: new(client.SelectAll),
+		Servers:  client.Servers,
+		Retries:  client.Retries,
 	}
 
 	for _, o := range opts {

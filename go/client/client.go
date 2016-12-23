@@ -21,7 +21,7 @@ type Selector interface {
 
 var (
 	// The default client
-	Default = NewHTTPClient()
+	Default = New()
 	// The default server list
 	Servers = []string{"http://127.0.0.1:8081"}
 	// The default number of retries
@@ -45,5 +45,5 @@ func Unsubscribe(ch <-chan []byte) error {
 
 // New returns a new Client
 func New(opts ...Option) Client {
-	return NewHTTPClient(opts...)
+	return newHTTPClient(opts...)
 }

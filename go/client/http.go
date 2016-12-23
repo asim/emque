@@ -221,8 +221,8 @@ func (s *subscriber) Close() error {
 	return nil
 }
 
-// NewHTTPClient returns a http Client
-func NewHTTPClient(opts ...Option) *httpClient {
+// newHTTPClient returns a http Client
+func newHTTPClient(opts ...Option) *httpClient {
 	options := Options{
 		Selector: new(SelectAll),
 		Servers:  Servers,
