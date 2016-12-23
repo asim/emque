@@ -58,6 +58,12 @@ func main() {
 c := client.New()
 ```
 
+gRPC client
+
+```go
+c := client.NewGRPCClient()
+```
+
 ### Clustering
 
 Clustering is supported on the client side. Publish/Subscribe operations are performed against all servers.

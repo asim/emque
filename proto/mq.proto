@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package mq;
+
+service MQ {
+	rpc Pub(PubRequest) returns (PubResponse) {}
+	rpc Sub(SubRequest) returns (stream SubResponse) {}
+}
+
+message PubRequest {
+	string topic = 1;
+	bytes payload = 2;
+}
+
+message PubResponse {
+}
+
+message SubRequest {
+	string topic = 1;
+}
+
+message SubResponse {
+	bytes payload = 1;
+}

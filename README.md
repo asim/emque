@@ -13,7 +13,7 @@ MQ is a simple distributed in-memory message broker
 - Optional: persist to file
 - Command line client
 - Go client library
-- HTTP2
+- HTTP2 or gRPC
 - TLS
 
 ## API
@@ -74,6 +74,11 @@ mq --cert_file=cert.pem --key_file=key.pem
 Persist to file per topic
 ```shell
 mq --persist
+```
+
+Use gRPC transport
+```shell
+mq --transport=grpc
 ```
 
 ### Run Proxy
@@ -164,6 +169,12 @@ data := <-ch
 ```go
 // defaults to MQ server localhost:8081
 c := client.New()
+```
+
+gRPC client
+
+```go
+c := client.NewGRPCClient()
 ```
 
 ### Clustering

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -12,7 +13,10 @@ import (
 	"github.com/asim/mq/broker"
 	mqclient "github.com/asim/mq/go/client"
 	"github.com/asim/mq/handler"
+	"github.com/asim/mq/proto/grpc/mq"
 	"github.com/gorilla/handlers"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -38,6 +42,8 @@ var (
 	selector = flag.String("select", "all", "Server select strategy. Supports all, shard")
 	// resolver for discovery
 	resolver = flag.String("resolver", "ip", "Server resolver for discovery. Supports ip, dns")
+	// transport http or grpc
+	transport = flag.String("transport", "http", "Transport for communication. Support http, grpc")
 )
 
 func init() {
@@ -63,7 +69,9 @@ func init() {
 		log.Fatal("Client specified without MQ server list")
 	}
 
+	var bclient mqclient.Client
 	var selecter mqclient.Selector
+	var resolvor mqclient.Resolver
 
 	switch *selector {
 	case "shard":
@@ -72,21 +80,28 @@ func init() {
 		selecter = new(mqclient.SelectAll)
 	}
 
-	var resolvor mqclient.Resolver
-
 	switch *resolver {
 	case "dns":
 		resolvor = new(mqclient.DNSResolver)
 	default:
 	}
 
+	options := []mqclient.Option{
+		mqclient.WithResolver(resolvor),
+		mqclient.WithSelector(selecter),
+		mqclient.WithServers(strings.Split(*servers, ",")...),
+		mqclient.WithRetries(*retries),
+	}
+
+	switch *transport {
+	case "grpc":
+		bclient = mqclient.NewGRPCClient(options...)
+	default:
+		bclient = mqclient.NewHTTPClient(options...)
+	}
+
 	broker.Default = broker.New(
-		broker.Client(mqclient.New(
-			mqclient.WithResolver(resolvor),
-			mqclient.WithSelector(selecter),
-			mqclient.WithServers(strings.Split(*servers, ",")...),
-			mqclient.WithRetries(*retries),
-		)),
+		broker.Client(bclient),
 		broker.Persist(*persist),
 		broker.Proxy(*client || *proxy),
 	)
@@ -119,6 +134,56 @@ func cli() {
 	}
 }
 
+func httpServer() {
+	// MQ Handlers
+	http.HandleFunc("/pub", handler.Pub)
+	http.HandleFunc("/sub", handler.Sub)
+
+	// logging handler
+	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
+
+	// tls enabled
+	if len(*cert) > 0 && len(*key) > 0 {
+		if err := http.ListenAndServeTLS(*address, *cert, *key, handler); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// plain server
+	if err := http.ListenAndServe(*address, handler); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func grpcServer() {
+	l, err := net.Listen("tcp", *address)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var opts []grpc.ServerOption
+
+	// tls enabled
+	if len(*cert) > 0 && len(*key) > 0 {
+		creds, err := credentials.NewServerTLSFromFile(*cert, *key)
+		if err != nil {
+			log.Fatal(err)
+		}
+		opts = append(opts, grpc.Creds(creds))
+	}
+
+	// new grpc server
+	srv := grpc.NewServer(opts...)
+
+	// register MQ server
+	mq.RegisterMQServer(srv, new(handler.GRPC))
+
+	// serve
+	if err := srv.Serve(l); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	// handle client
 	if *client {
@@ -129,13 +194,6 @@ func main() {
 	// cleanup broker
 	defer broker.Default.Close()
 
-	// MQ Handlers
-	http.HandleFunc("/pub", handler.Pub)
-	http.HandleFunc("/sub", handler.Sub)
-
-	// logging handler
-	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
-
 	// proxy enabled
 	if *proxy {
 		log.Println("Proxy enabled")
@@ -144,16 +202,17 @@ func main() {
 	// tls enabled
 	if len(*cert) > 0 && len(*key) > 0 {
 		log.Println("TLS Enabled")
-		log.Println("MQ listening on", *address)
-		if err := http.ListenAndServeTLS(*address, *cert, *key, handler); err != nil {
-			log.Fatal(err)
-		}
-		return
 	}
 
-	// plain server
-	log.Println("MQ listening on", *address)
-	if err := http.ListenAndServe(*address, handler); err != nil {
-		log.Fatal(err)
+	// now serve the transport
+	switch *transport {
+	case "grpc":
+		log.Println("GRPC transport enabled")
+		log.Println("MQ listening on", *address)
+		grpcServer()
+	default:
+		log.Println("HTTP transport enabled")
+		log.Println("MQ listening on", *address)
+		httpServer()
 	}
 }
