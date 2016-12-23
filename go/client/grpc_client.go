@@ -44,8 +44,14 @@ func grpcPublish(addr, topic string, payload []byte) error {
 }
 
 func grpcSubscribe(addr string, s *subscriber) error {
+	var dialOpts []grpc.DialOption
+
+	if !strings.HasSuffix(addr, ":443") {
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	}
+
 	// TODO: dial secure
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(addr, dialOpts...)
 	if err != nil {
 		return err
 	}
