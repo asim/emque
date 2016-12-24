@@ -1,10 +1,9 @@
-package grpc
+package http
 
 import (
 	"net/http"
 	"os"
 
-	"github.com/asim/mq/handler"
 	"github.com/asim/mq/server"
 	"github.com/gorilla/handlers"
 )
@@ -15,8 +14,8 @@ type httpServer struct {
 
 func (h *httpServer) Run() error {
 	// MQ Handlers
-	http.HandleFunc("/pub", handler.Pub)
-	http.HandleFunc("/sub", handler.Sub)
+	http.HandleFunc("/pub", pub)
+	http.HandleFunc("/sub", sub)
 
 	// logging handler
 	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)

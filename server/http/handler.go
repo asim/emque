@@ -1,4 +1,4 @@
-package handler
+package http
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func Pub(w http.ResponseWriter, r *http.Request) {
+func pub(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 
 	b, err := ioutil.ReadAll(r.Body)
@@ -24,7 +24,7 @@ func Pub(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Sub(w http.ResponseWriter, r *http.Request) {
+func sub(w http.ResponseWriter, r *http.Request) {
 	var wr writer
 
 	if u := r.Header.Get("Upgrade"); len(u) == 0 || u != "websocket" {

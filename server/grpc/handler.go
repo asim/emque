@@ -1,4 +1,4 @@
-package handler
+package grpc
 
 import (
 	"fmt"
@@ -8,16 +8,16 @@ import (
 	"golang.org/x/net/context"
 )
 
-type GRPC struct{}
+type handler struct{}
 
-func (g *GRPC) Pub(ctx context.Context, req *mq.PubRequest) (*mq.PubResponse, error) {
+func (h *handler) Pub(ctx context.Context, req *mq.PubRequest) (*mq.PubResponse, error) {
 	if err := broker.Publish(req.Topic, req.Payload); err != nil {
 		return nil, fmt.Errorf("pub error: %v", err)
 	}
 	return new(mq.PubResponse), nil
 }
 
-func (g *GRPC) Sub(req *mq.SubRequest, stream mq.MQ_SubServer) error {
+func (h *handler) Sub(req *mq.SubRequest, stream mq.MQ_SubServer) error {
 	ch, err := broker.Subscribe(req.Topic)
 	if err != nil {
 		return fmt.Errorf("could not subscribe: %v", err)
