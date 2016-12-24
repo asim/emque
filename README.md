@@ -12,6 +12,7 @@ MQ is a simple distributed in-memory message broker
 - Auto retries
 - Optional: persist to file
 - Command line client
+- Interactive client
 - Go client library
 - HTTP2 or gRPC
 - TLS

@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/asim/mq/broker"
 	mqclient "github.com/asim/mq/go/client"
@@ -32,10 +34,11 @@ var (
 	servers = flag.String("servers", "", "Comma separated MQ cluster list used by Proxy")
 
 	// client flags
-	client    = flag.Bool("client", false, "Run the MQ client")
-	publish   = flag.Bool("publish", false, "Publish via the MQ client")
-	subscribe = flag.Bool("subscribe", false, "Subscribe via the MQ client")
-	topic     = flag.String("topic", "", "Topic for client to publish or subscribe to")
+	interactive = flag.Bool("i", false, "Interactive client mode")
+	client      = flag.Bool("client", false, "Run the MQ client")
+	publish     = flag.Bool("publish", false, "Publish via the MQ client")
+	subscribe   = flag.Bool("subscribe", false, "Subscribe via the MQ client")
+	topic       = flag.String("topic", "", "Topic for client to publish or subscribe to")
 
 	// select strategy
 	selector = flag.String("select", "all", "Server select strategy. Supports all, shard")
@@ -64,8 +67,8 @@ func init() {
 		log.Fatal("Specify whether to publish or subscribe")
 	}
 
-	if *client && len(*servers) == 0 {
-		log.Fatal("Client specified without MQ server list")
+	if (*client || *interactive) && len(*servers) == 0 {
+		*servers = "localhost:8081"
 	}
 
 	var bclient mqclient.Client
@@ -102,22 +105,35 @@ func init() {
 	broker.Default = broker.New(
 		broker.Client(bclient),
 		broker.Persist(*persist),
-		broker.Proxy(*client || *proxy),
+		broker.Proxy(*client || *proxy || *interactive),
 	)
 }
 
 func cli() {
+	wg := sync.WaitGroup{}
+	p := make(chan []byte, 1000)
+	d := map[string]time.Time{}
+	ttl := time.Millisecond * 10
+	tick := time.NewTicker(time.Second * 5)
+
 	// process publish
-	if *publish {
-		// scan till EOF
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			broker.Publish(*topic, scanner.Bytes())
-		}
+	if *publish || *interactive {
+		wg.Add(1)
+		go func() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				if *interactive {
+					p <- scanner.Bytes()
+				}
+				broker.Publish(*topic, scanner.Bytes())
+			}
+			wg.Done()
+		}()
 	}
 
 	// subscribe?
-	if !*subscribe {
+	if !(*subscribe || *interactive) {
+		wg.Wait()
 		return
 	}
 
@@ -127,15 +143,32 @@ func cli() {
 		fmt.Println(err)
 		return
 	}
+	defer broker.Unsubscribe(*topic, ch)
 
-	for e := range ch {
-		fmt.Println(string(e))
+	for {
+		select {
+		// process sub event
+		case e := <-ch:
+			// skip if deduped
+			if t, ok := d[string(e)]; ok && time.Since(t) < ttl {
+				continue
+			}
+			fmt.Println(string(e))
+		// add dedupe entry
+		case b := <-p:
+			d[string(b)] = time.Now()
+		// flush deduper
+		case <-tick.C:
+			d = map[string]time.Time{}
+		}
 	}
+
+	wg.Wait()
 }
 
 func main() {
 	// handle client
-	if *client {
+	if *client || *interactive {
 		cli()
 		return
 	}
