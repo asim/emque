@@ -17,6 +17,8 @@ MQ is a simple distributed in-memory message broker
 - Go client
 - Persist to file
 
+MQ generates a self signed certificate by default if not TLS config is specified
+
 ## API
 
 Publish
@@ -128,7 +130,7 @@ mq -i --topic=foo
 Publish via HTTP
 
 ```
-curl -d "A completely arbitrary message" "http://localhost:8081/pub?topic=foo"
+curl -k -d "A completely arbitrary message" "https://localhost:8081/pub?topic=foo"
 ```
 
 ### Subscribe
@@ -136,11 +138,13 @@ curl -d "A completely arbitrary message" "http://localhost:8081/pub?topic=foo"
 Subscribe via websockets
 
 ```
-curl -i -N -H "Connection: Upgrade" \
+curl -k -i -N -H "Connection: Upgrade" \
 	-H "Upgrade: websocket" \
 	-H "Host: localhost:8081" \
 	-H "Origin:http://localhost:8081" \
-	"http://localhost:8081/sub?topic=foo"
+	-H "Sec-Websocket-Version: 13" \
+	-H "Sec-Websocket-Key: MQ" \
+	"https://localhost:8081/sub?topic=foo"
 ```
 
 ## Go Client [![GoDoc](https://godoc.org/github.com/asim/mq/go/client?status.svg)](https://godoc.org/github.com/asim/mq/go/client)
