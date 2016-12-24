@@ -148,12 +148,13 @@ func cli() {
 	for {
 		select {
 		// process sub event
-		case e := <-ch:
+		case b := <-ch:
 			// skip if deduped
-			if t, ok := d[string(e)]; ok && time.Since(t) < ttl {
+			if t, ok := d[string(b)]; ok && time.Since(t) < ttl {
 				continue
 			}
-			fmt.Println(string(e))
+			d[string(b)] = time.Now()
+			fmt.Println(string(b))
 		// add dedupe entry
 		case b := <-p:
 			d[string(b)] = time.Now()
