@@ -5,6 +5,7 @@ import (
 
 	"github.com/asim/mq/proto/grpc/mq"
 	"github.com/asim/mq/server"
+	"github.com/asim/mq/server/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -30,6 +31,20 @@ func (g *grpcServer) Run() error {
 		if err != nil {
 			return err
 		}
+		opts = append(opts, grpc.Creds(creds))
+	} else {
+		// generate tls config
+		addr, err := util.Address(g.options.Address)
+		if err != nil {
+			return err
+		}
+
+		cert, err := util.Certificate(addr)
+		if err != nil {
+			return err
+		}
+
+		creds := credentials.NewServerTLSFromCert(&cert)
 		opts = append(opts, grpc.Creds(creds))
 	}
 

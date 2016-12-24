@@ -11,10 +11,10 @@ MQ is a simple distributed in-memory message broker
 - Proxying
 - Discovery
 - Auto retries
+- TLS support
 - Command line client
 - Interactive client
 - Go client
-- TLS support
 - Persist to file
 
 ## API

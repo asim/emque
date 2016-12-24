@@ -2,8 +2,10 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -35,9 +37,32 @@ type all struct {
 	servers []string
 }
 
+var (
+	httpc = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 10 * time.Second,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	wsd = &websocket.Dialer{
+		Proxy: http.ProxyFromEnvironment,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+)
+
 func publish(addr, topic string, payload []byte) error {
 	url := fmt.Sprintf("%s/pub?topic=%s", addr, topic)
-	rsp, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
+	rsp, err := httpc.Post(url, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
@@ -55,7 +80,7 @@ func subscribe(addr string, s *subscriber) error {
 	}
 
 	url := fmt.Sprintf("%s/sub?topic=%s", addr, s.topic)
-	c, _, err := websocket.DefaultDialer.Dial(url, make(http.Header))
+	c, _, err := wsd.Dial(url, make(http.Header))
 	if err != nil {
 		return err
 	}
@@ -129,7 +154,7 @@ func (c *httpClient) run() {
 				}
 				for i, ip := range ips {
 					if !strings.HasPrefix(ip, "http") {
-						ips[i] = fmt.Sprintf("http://%s", ip)
+						ips[i] = fmt.Sprintf("https://%s", ip)
 					}
 				}
 				servers = append(servers, ips...)
@@ -261,7 +286,7 @@ func newHTTPClient(opts ...Option) *httpClient {
 
 	for _, addr := range options.Servers {
 		if !strings.HasPrefix(addr, "http") {
-			addr = fmt.Sprintf("http://%s", addr)
+			addr = fmt.Sprintf("https://%s", addr)
 		}
 		servers = append(servers, addr)
 	}

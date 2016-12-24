@@ -1,8 +1,8 @@
 package client
 
 import (
+	"crypto/tls"
 	"errors"
-	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +11,7 @@ import (
 	"github.com/asim/mq/proto/grpc/mq"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // internal grpcClient
@@ -33,11 +34,12 @@ type subscriber struct {
 func grpcPublish(addr, topic string, payload []byte) error {
 	var dialOpts []grpc.DialOption
 
-	if !strings.HasSuffix(addr, ":443") {
-		dialOpts = append(dialOpts, grpc.WithInsecure())
-	}
+	creds := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})
 
-	// TODO: dial secure
+	dialOpts = append(dialOpts, grpc.WithTransportCredentials(creds))
+
 	conn, err := grpc.Dial(addr, dialOpts...)
 	if err != nil {
 		return err
@@ -56,11 +58,12 @@ func grpcPublish(addr, topic string, payload []byte) error {
 func grpcSubscribe(addr string, s *subscriber) error {
 	var dialOpts []grpc.DialOption
 
-	if !strings.HasSuffix(addr, ":443") {
-		dialOpts = append(dialOpts, grpc.WithInsecure())
-	}
+	creds := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})
 
-	// TODO: dial secure
+	dialOpts = append(dialOpts, grpc.WithTransportCredentials(creds))
+
 	conn, err := grpc.Dial(addr, dialOpts...)
 	if err != nil {
 		return err
