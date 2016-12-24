@@ -5,8 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"os"
 	"strings"
 
@@ -15,11 +13,9 @@ import (
 	mqgrpc "github.com/asim/mq/go/client/grpc"
 	mqresolver "github.com/asim/mq/go/client/resolver"
 	mqselector "github.com/asim/mq/go/client/selector"
-	"github.com/asim/mq/handler"
-	"github.com/asim/mq/proto/grpc/mq"
-	"github.com/gorilla/handlers"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"github.com/asim/mq/server"
+	grpcsrv "github.com/asim/mq/server/grpc"
+	httpsrv "github.com/asim/mq/server/http"
 )
 
 var (
@@ -137,56 +133,6 @@ func cli() {
 	}
 }
 
-func httpServer() {
-	// MQ Handlers
-	http.HandleFunc("/pub", handler.Pub)
-	http.HandleFunc("/sub", handler.Sub)
-
-	// logging handler
-	handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
-
-	// tls enabled
-	if len(*cert) > 0 && len(*key) > 0 {
-		if err := http.ListenAndServeTLS(*address, *cert, *key, handler); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// plain server
-	if err := http.ListenAndServe(*address, handler); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func grpcServer() {
-	l, err := net.Listen("tcp", *address)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var opts []grpc.ServerOption
-
-	// tls enabled
-	if len(*cert) > 0 && len(*key) > 0 {
-		creds, err := credentials.NewServerTLSFromFile(*cert, *key)
-		if err != nil {
-			log.Fatal(err)
-		}
-		opts = append(opts, grpc.Creds(creds))
-	}
-
-	// new grpc server
-	srv := grpc.NewServer(opts...)
-
-	// register MQ server
-	mq.RegisterMQServer(srv, new(handler.GRPC))
-
-	// serve
-	if err := srv.Serve(l); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
 	// handle client
 	if *client {
@@ -197,6 +143,10 @@ func main() {
 	// cleanup broker
 	defer broker.Default.Close()
 
+	options := []server.Option{
+		server.WithAddress(*address),
+	}
+
 	// proxy enabled
 	if *proxy {
 		log.Println("Proxy enabled")
@@ -205,17 +155,23 @@ func main() {
 	// tls enabled
 	if len(*cert) > 0 && len(*key) > 0 {
 		log.Println("TLS Enabled")
+		options = append(options, server.WithTLS(*cert, *key))
 	}
+
+	var server server.Server
 
 	// now serve the transport
 	switch *transport {
 	case "grpc":
 		log.Println("GRPC transport enabled")
-		log.Println("MQ listening on", *address)
-		grpcServer()
+		server = grpcsrv.New(options...)
 	default:
 		log.Println("HTTP transport enabled")
-		log.Println("MQ listening on", *address)
-		httpServer()
+		server = httpsrv.New(options...)
+	}
+
+	log.Println("MQ listening on", *address)
+	if err := server.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
