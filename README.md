@@ -118,6 +118,11 @@ Subscribe
 mq --client --topic=foo --subscribe --servers=localhost:8081
 ``` 
 
+Interactive mode
+```shell
+mq -i --topic=foo
+```
+
 ### Publish
 
 Publish via HTTP
