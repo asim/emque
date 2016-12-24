@@ -14,7 +14,7 @@ MQ is a simple distributed in-memory message broker
 - Command line client
 - Interactive client
 - Go client library
-- HTTP2 or gRPC
+- HTTP or gRPC transport
 - TLS
 
 ## API
