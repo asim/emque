@@ -35,11 +35,11 @@ Subscribe
 - MQ clients shard or cluster MQ servers by publish/subscribing to one or all servers
 - MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
 
-Because of this simplistic architecture, proxies and servers can be chained to build message pipelines.
-
 <p align="center">
   <img src="mq.png" />
 </p>
+
+Because of this simplistic architecture, proxies and servers can be chained to build message pipelines
 
 ## Usage
 
