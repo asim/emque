@@ -17,7 +17,7 @@ MQ is a simple distributed in-memory message broker
 - Go client
 - Persist to file
 
-MQ generates a self signed certificate by default if not TLS config is specified
+MQ generates a self signed certificate by default if no TLS config is specified
 
 ## API
 
