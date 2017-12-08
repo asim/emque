@@ -9,33 +9,56 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func pub(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Pub error", http.StatusInternalServerError)
-		return
-	}
-	r.Body.Close()
-
-	if err := broker.Publish(topic, b); err != nil {
-		http.Error(w, "Pub error", http.StatusInternalServerError)
+	if websocket.IsWebSocketUpgrade(r) {
+		conn, err := upgrader.Upgrade(w, r, w.Header())
+		if err != nil {
+			return
+		}
+		for {
+			messageType, b, err := conn.ReadMessage()
+			if messageType == -1 {
+				return
+			}
+			if err != nil {
+				continue
+			}
+			broker.Publish(topic, b)
+		}
+	} else {
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Pub error", http.StatusInternalServerError)
+			return
+		}
+		r.Body.Close()
+		if err := broker.Publish(topic, b); err != nil {
+			http.Error(w, "Pub error", http.StatusInternalServerError)
+		}
 	}
 }
 
 func sub(w http.ResponseWriter, r *http.Request) {
 	var wr writer
 
-	if u := r.Header.Get("Upgrade"); len(u) == 0 || u != "websocket" {
-		wr = &httpWriter{w}
-	} else {
-		conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
+	if websocket.IsWebSocketUpgrade(r) {
+		conn, err := upgrader.Upgrade(w, r, w.Header())
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Could not open websocket connection: %v", err), http.StatusBadRequest)
 			return
 		}
 		wr = &wsWriter{conn}
+	} else {
+		wr = &httpWriter{w}
 	}
 
 	topic := r.URL.Query().Get("topic")
