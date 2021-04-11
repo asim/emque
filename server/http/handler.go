@@ -56,6 +56,15 @@ func sub(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+		// Drain the websocket so that we handle pings and connection close
+		go func(c *websocket.Conn) {
+			for {
+				if _, _, err := c.NextReader(); err != nil {
+					c.Close()
+					break
+				}
+			}
+		}(conn)
 		wr = &wsWriter{conn}
 	} else {
 		wr = &httpWriter{w}
