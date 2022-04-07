@@ -8,7 +8,7 @@ import (
 
 	"github.com/asim/mq/go/client"
 	"github.com/asim/mq/go/client/selector"
-	"github.com/asim/mq/proto/grpc/mq"
+	pb "github.com/asim/mq/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -46,8 +46,8 @@ func grpcPublish(addr, topic string, payload []byte) error {
 	}
 	defer conn.Close()
 
-	c := mq.NewMQClient(conn)
-	_, err = c.Pub(context.TODO(), &mq.PubRequest{
+	c := pb.NewMQClient(conn)
+	_, err = c.Pub(context.TODO(), &pb.PubRequest{
 		Topic:   topic,
 		Payload: payload,
 	})
@@ -69,8 +69,8 @@ func grpcSubscribe(addr string, s *subscriber) error {
 		return err
 	}
 
-	c := mq.NewMQClient(conn)
-	sub, err := c.Sub(context.TODO(), &mq.SubRequest{
+	c := pb.NewMQClient(conn)
+	sub, err := c.Sub(context.TODO(), &pb.SubRequest{
 		Topic: s.topic,
 	})
 	if err != nil {

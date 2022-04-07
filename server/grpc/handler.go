@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/asim/mq/broker"
-	"github.com/asim/mq/proto/grpc/mq"
+	"github.com/asim/mq/proto"
 	"golang.org/x/net/context"
 )
 

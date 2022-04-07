@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package mq;
 
+option go_package = "./proto;mq";
+
 service MQ {
 	rpc Pub(PubRequest) returns (PubResponse) {}
 	rpc Sub(SubRequest) returns (stream SubResponse) {}
