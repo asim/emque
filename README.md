@@ -4,7 +4,7 @@ MQ is an in-memory message broker
 
 ## Features
 
-- In-memory message queue
+- In-memory message broker
 - HTTP or gRPC transport
 - Clustering
 - Sharding
@@ -12,10 +12,9 @@ MQ is an in-memory message broker
 - Discovery
 - Auto retries
 - TLS support
-- Command line client
-- Interactive client
-- Go client
-- Persist to file
+- Command line interface
+- Interactive prompt
+- Go client library
 
 MQ generates a self signed certificate by default if no TLS config is specified
 
