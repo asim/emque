@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/asim/mq/server"
-	"github.com/asim/mq/server/util"
+	"github.com/asim/emque/server"
+	"github.com/asim/emque/server/util"
 	"github.com/gorilla/handlers"
 )
 

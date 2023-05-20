@@ -1,6 +1,6 @@
-# MQ [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Travis CI](https://travis-ci.org/asim/mq.svg?branch=master)](https://travis-ci.org/asim/mq) [![Go Report Card](https://goreportcard.com/badge/asim/mq)](https://goreportcard.com/report/github.com/asim/mq)
+# Emque [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Go Report Card](https://goreportcard.com/badge/asim/emque)](https://goreportcard.com/report/github.com/asim/emque)
 
-MQ is an in-memory message broker
+Emque is an in-memory message broker
 
 ## Features
 
@@ -16,7 +16,7 @@ MQ is an in-memory message broker
 - Interactive prompt
 - Go client library
 
-MQ generates a self signed certificate by default if no TLS config is specified
+Emque generates a self signed certificate by default if no TLS config is specified
 
 ## API
 
@@ -32,12 +32,12 @@ Subscribe
 
 ## Architecture
 
-- MQ servers are standalone servers with in-memory queues and provide a HTTP API
-- MQ clients shard or cluster MQ servers by publish/subscribing to one or all servers
-- MQ proxies use the go client to cluster MQ servers and provide a unified HTTP API
+- Emque servers are standalone servers with in-memory queues and provide a HTTP API
+- Emque clients shard or cluster Emque servers by publish/subscribing to one or all servers
+- Emque proxies use the go client to cluster Emque servers and provide a unified HTTP API
 
 <p align="center">
-  <img src="mq.png" />
+  <img src="emque.png" />
 </p>
 
 Because of this simplistic architecture, proxies and servers can be chained to build message pipelines
@@ -47,62 +47,56 @@ Because of this simplistic architecture, proxies and servers can be chained to b
 ### Install
 
 ```shell
-go get github.com/asim/mq
-```
-
-Or
-
-```shell
-docker pull chuhnk/mq
+go get github.com/asim/emque
 ```
 
 ### Run Server
 
 Listens on `*:8081`
 ```shell
-mq
+emque
 ```
 
 Set server address
 ```shell
-mq --address=localhost:9091
+emque --address=localhost:9091
 ```
 
 Enable TLS
 ```shell
-mq --cert_file=cert.pem --key_file=key.pem
+emque --cert_file=cert.pem --key_file=key.pem
 ```
 
 Persist to file per topic
 ```shell
-mq --persist
+emque --persist
 ```
 
 Use gRPC transport
 ```shell
-mq --transport=grpc
+emque --transport=grpc
 ```
 
 ### Run Proxy
 
-MQ can be run as a proxy which includes clustering, sharding and auto retry features.
+Emque can be run as a proxy which includes clustering, sharding and auto retry features.
 
-Clustering: Publish and subscribe to all MQ servers
+Clustering: Publish and subscribe to all Emque servers
 
 ```shell
-mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
+emque --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083
 ```
 
 Sharding: Requests are sent to a single server based on topic
 
 ```shell
-mq --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083 --select=shard
+emque --proxy --servers=10.0.0.1:8081,10.0.0.1:8082,10.0.0.1:8083 --select=shard
 ```
 
 Resolver: Use a name resolver rather than specifying server ips
 
 ```shell
-mq --proxy --resolver=dns --servers=mq.proxy.dev
+emque --proxy --resolver=dns --servers=emque.proxy.dev
 ```
 
 ### Run Client
@@ -110,18 +104,18 @@ mq --proxy --resolver=dns --servers=mq.proxy.dev
 Publish
 
 ```shell
-echo "A completely arbitrary message" | mq --client --topic=foo --publish --servers=localhost:8081
+echo "A completely arbitrary message" | emque --client --topic=foo --publish --servers=localhost:8081
 ```
 
 Subscribe
 
 ```shell
-mq --client --topic=foo --subscribe --servers=localhost:8081
+emque --client --topic=foo --subscribe --servers=localhost:8081
 ``` 
 
 Interactive mode
 ```shell
-mq -i --topic=foo
+emque -i --topic=foo
 ```
 
 ### Publish
@@ -142,16 +136,16 @@ curl -k -i -N -H "Connection: Upgrade" \
 	-H "Host: localhost:8081" \
 	-H "Origin:http://localhost:8081" \
 	-H "Sec-Websocket-Version: 13" \
-	-H "Sec-Websocket-Key: MQ" \
+	-H "Sec-Websocket-Key: Emque" \
 	"https://localhost:8081/sub?topic=foo"
 ```
 
-## Go Client [![GoDoc](https://godoc.org/github.com/asim/mq/go/client?status.svg)](https://godoc.org/github.com/asim/mq/go/client)
+## Go Client [![GoDoc](https://godoc.org/github.com/asim/emque/go/client?status.svg)](https://godoc.org/github.com/asim/emque/go/client)
 
-MQ provides a simple go client
+Emque provides a simple go client
 
 ```go
-import "github.com/asim/mq/go/client"
+import "github.com/asim/emque/go/client"
 ```
 
 ### Publish
@@ -176,14 +170,14 @@ data := <-ch
 ### New Client
 
 ```go
-// defaults to MQ server localhost:8081
+// defaults to Emque server localhost:8081
 c := client.New()
 ```
 
 gRPC client
 
 ```go
-import "github.com/asim/mq/go/client/grpc"
+import "github.com/asim/emque/go/client/grpc"
 
 c := grpc.New()
 ```
@@ -203,7 +197,7 @@ c := client.New(
 Sharding is supported via client much like gomemcache. Publish/Subscribe operations are performed against a single server.
 
 ```go
-import "github.com/asim/mq/go/client/selector"
+import "github.com/asim/emque/go/client/selector"
 
 c := client.New(
 	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
@@ -212,15 +206,15 @@ c := client.New(
 ```
 ### Resolver
 
-A name resolver can be used to discover the ip addresses of MQ servers
+A name resolver can be used to discover the ip addresses of Emque servers
 
 ```go
-import "github.com/asim/mq/go/client/resolver"
+import "github.com/asim/emque/go/client/resolver"
 
 c := client.New(
 	// use the DNS resolver
 	client.WithResolver(new(resolver.DNS)),
 	// specify DNS name as server
-	client.WithServers("mq.proxy.local"),
+	client.WithServers("emque.proxy.local"),
 )
 ```

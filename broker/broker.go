@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/asim/mq/go/client"
+	"github.com/asim/emque/go/client"
 )
 
 var (

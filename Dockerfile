@@ -1,6 +1,6 @@
 FROM alpine:3.2
 RUN apk add --update ca-certificates && \
     rm -rf /var/cache/apk/* /tmp/*
-ADD mq /mq
+ADD emque /emque
 WORKDIR /
-ENTRYPOINT [ "/mq" ]
+ENTRYPOINT [ "/emque" ]

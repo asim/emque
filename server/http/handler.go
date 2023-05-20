@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/asim/mq/broker"
+	"github.com/asim/emque/broker"
 	"github.com/gorilla/websocket"
 )
 

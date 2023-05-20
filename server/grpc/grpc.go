@@ -3,9 +3,9 @@ package grpc
 import (
 	"net"
 
-	"github.com/asim/mq/proto"
-	"github.com/asim/mq/server"
-	"github.com/asim/mq/server/util"
+	"github.com/asim/emque/proto"
+	"github.com/asim/emque/server"
+	"github.com/asim/emque/server/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

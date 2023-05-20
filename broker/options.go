@@ -1,7 +1,7 @@
 package broker
 
 import (
-	"github.com/asim/mq/go/client"
+	"github.com/asim/emque/go/client"
 )
 
 type Options struct {

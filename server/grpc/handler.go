@@ -3,8 +3,8 @@ package grpc
 import (
 	"fmt"
 
-	"github.com/asim/mq/broker"
-	"github.com/asim/mq/proto"
+	"github.com/asim/emque/broker"
+	"github.com/asim/emque/proto"
 	"golang.org/x/net/context"
 )
 

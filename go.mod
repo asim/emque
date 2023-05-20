@@ -1,4 +1,4 @@
-module github.com/asim/mq
+module github.com/asim/emque
 
 go 1.18
 
