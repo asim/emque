@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/asim/emque/go/client"
-	"github.com/asim/emque/go/client/selector"
+	"github.com/asim/emque/client"
+	"github.com/asim/emque/client/selector"
 	pb "github.com/asim/emque/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

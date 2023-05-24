@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asim/emque/go/client"
+	"github.com/asim/emque/client"
 )
 
 var (

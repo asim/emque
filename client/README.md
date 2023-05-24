@@ -1,4 +1,4 @@
-# Go Client [![GoDoc](https://godoc.org/github.com/asim/emque/go/client?status.svg)](https://godoc.org/github.com/asim/emque/go/client)
+# Go Client [![GoDoc](https://godoc.org/github.com/asim/emque/client?status.svg)](https://godoc.org/github.com/asim/emque/client)
 
 ## Usage
 
@@ -11,7 +11,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/asim/emque/go/client"
+	"github.com/asim/emque/client"
 )
 
 func main() {
@@ -33,7 +33,7 @@ package main
 import (
 	"log"
 
-	"github.com/asim/emque/go/client"
+	"github.com/asim/emque/client"
 )
 
 func main() {
@@ -61,7 +61,7 @@ c := client.New()
 gRPC client
 
 ```go
-import "github.com/asim/emque/go/client/grpc"
+import "github.com/asim/emque/client/grpc"
 
 c := grpc.New()
 ```
@@ -81,7 +81,7 @@ c := client.New(
 Sharding is supported via client much like gomemcache. Publish/Subscribe operations are performed against a single server.
 
 ```go
-import "github.com/asim/emque/go/client/selector"
+import "github.com/asim/emque/client/selector"
 
 c := client.New(
 	client.WithServers("10.0.0.1:8081", "10.0.0.1:8082", "10.0.0.1:8083"),
@@ -94,7 +94,7 @@ c := client.New(
 A name resolver can be used to discover the ip addresses of MQ servers
 
 ```go
-import "github.com/asim/emque/go/client/resolver"
+import "github.com/asim/emque/client/resolver"
 
 c := client.New(
 	// use the DNS resolver
