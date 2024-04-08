@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 type httpServer struct {
 	options *server.Options
+	srv     *http.Server
 }
 
 func (h *httpServer) Run() error {
@@ -58,7 +60,13 @@ func (h *httpServer) Run() error {
 		TLSConfig: config,
 	}
 
+	h.srv = srv
+
 	return srv.Serve(l)
+}
+
+func (h *httpServer) Stop() error {
+	return h.srv.Shutdown(context.TODO())
 }
 
 func New(opts ...server.Option) *httpServer {
