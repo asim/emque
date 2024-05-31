@@ -3,7 +3,7 @@ package grpc
 import (
 	"net"
 
-	"github.com/asim/emque/proto"
+	mq "github.com/asim/emque/proto"
 	"github.com/asim/emque/server"
 	"github.com/asim/emque/server/util"
 	"google.golang.org/grpc"
@@ -12,6 +12,7 @@ import (
 
 type grpcServer struct {
 	options *server.Options
+	srv     *grpc.Server
 }
 
 func (g *grpcServer) Run() error {
@@ -50,12 +51,19 @@ func (g *grpcServer) Run() error {
 
 	// new grpc server
 	srv := grpc.NewServer(opts...)
+	g.srv = srv
 
 	// register MQ server
 	mq.RegisterMQServer(srv, new(handler))
 
 	// serve
 	return srv.Serve(l)
+}
+
+func (g *grpcServer) Stop() error {
+	g.srv.GracefulStop()
+	return nil
+
 }
 
 func New(opts ...server.Option) *grpcServer {
